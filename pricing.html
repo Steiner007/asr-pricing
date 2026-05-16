@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ASR Price List & Quote</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100dvh;overflow:hidden;font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;background:#f2f2f7}
+body{display:flex;flex-direction:column}
+.view{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0}.view.on{display:flex}
+.hero{background:linear-gradient(135deg,#b45309,#d97706);padding:max(env(safe-area-inset-top),14px) 16px 10px;color:#fff;flex-shrink:0}
+.hero h1{font-size:18px;font-weight:800;margin:0 0 2px}.hero p{font-size:11px;opacity:.8;margin:0}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.hero-btns{display:flex;gap:6px}
+.hb{background:rgba(255,255,255,.2);border:none;border-radius:10px;padding:8px 10px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap}
+.search-wrap{position:relative;margin-top:10px}
+.search{width:100%;padding:10px 12px;border-radius:10px;border:none;font-size:13px;font-family:inherit;outline:none;background:rgba(255,255,255,.95);color:#1c1c1e}
+.suggest{position:absolute;top:100%;left:0;right:0;background:#fff;border-radius:0 0 10px 10px;box-shadow:0 8px 24px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;z-index:100;display:none}
+.suggest.on{display:block}
+.sug-item{padding:10px 14px;font-size:12px;font-weight:600;color:#1c1c1e;border-bottom:1px solid #f5f5f5;cursor:pointer}
+.sug-item:active{background:#fef3c7}
+.sug-item .sc{font-size:10px;color:#888;font-weight:500}
+.list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f2f2f7}
+.cat-hdr{padding:8px 16px 6px;font-size:10px;font-weight:800;color:#92400e;background:#fef3c7;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.cat-hdr .ce{font-size:9px;color:#b45309;font-weight:600;opacity:.7}
+.item-row{display:flex;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid #f5f5f5;gap:6px}
+.item-info{flex:1;min-width:0}
+.item-name{font-size:12px;font-weight:700;color:#1c1c1e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-price{font-size:11px;color:#888;margin-top:1px;cursor:pointer;display:inline}
+.item-price:active{color:#d97706}
+.qi{width:44px;height:30px;border-radius:8px;border:2px solid #e5e5ea;text-align:center;font-size:13px;font-weight:700;font-family:inherit;color:#1c1c1e;outline:none;-webkit-appearance:none;-moz-appearance:textfield;flex-shrink:0}
+.qi:focus{border-color:#d97706}
+.ab{width:30px;height:30px;border-radius:50%;border:none;background:#d97706;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.db{width:26px;height:26px;border-radius:50%;border:none;background:#fee2e2;color:#dc2626;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+/* Add to cat */
+.add-row{background:#fffbeb;border-bottom:2px solid #fef3c7}
+.add-hdr{padding:8px 16px 6px;font-size:10px;font-weight:800;color:#fff;background:#d97706;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between}
+.add-body{padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px}
+.ai{width:100%;padding:10px 12px;border:2px solid #e5e5ea;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;background:#fff}
+.ai:focus{border-color:#d97706}
+.add-fields{display:flex;gap:6px;align-items:center}
+.pw{position:relative;flex:1}.pw span{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:700;color:#999;pointer-events:none}
+.pi{width:100%;padding:10px 10px 10px 24px;border:2px solid #e5e5ea;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;outline:none;color:#1c1c1e;background:#fff}
+.pi:focus{border-color:#d97706}
+.us{padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;color:#1c1c1e;background:#fff;outline:none;cursor:pointer;flex-shrink:0}
+.cs{padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;color:#1c1c1e;background:#fff;outline:none;cursor:pointer;flex:1;max-width:50%}
+.abtn{height:42px;padding:0 14px;border-radius:10px;border:none;background:#d97706;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
+/* Cart */
+.cart-hdr{background:linear-gradient(135deg,#b45309,#d97706);padding:14px 16px 10px;color:#fff;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.cart-hdr h2{font-size:18px;font-weight:800;margin:0;flex:1}
+.bb{background:rgba(255,255,255,.2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;color:#fff;font-family:inherit}
+.cb{background:rgba(255,255,255,.15);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.cart-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f2f2f7;padding-bottom:80px}
+.summary{margin:0 14px 14px;background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.qw{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.qb{width:26px;height:26px;border-radius:50%;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center}
+.qd{border:1px solid #e5e5ea;background:#f5f5f5;color:#1c1c1e}.qp{border:none;background:#d97706;color:#fff}
+.cqi{width:48px;height:28px;border-radius:6px;border:2px solid #e5e5ea;text-align:center;font-size:13px;font-weight:800;font-family:inherit;color:#1c1c1e;outline:none;-webkit-appearance:none;-moz-appearance:textfield}
+.cqi:focus{border-color:#d97706}
+/* Edit modal */
+.emo{position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(3px)}
+.emc{background:#fff;border-radius:14px;padding:20px;width:min(300px,88vw);box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.emc h3{font-size:14px;font-weight:700;color:#222;margin:0 0 12px}
+.emc label{font-size:11px;font-weight:700;color:#666;display:block;margin-bottom:4px}
+.emi{width:100%;padding:12px;font-size:16px;font-weight:700;font-family:inherit;border:2px solid #e5e5ea;border-radius:10px;outline:none;color:#222;margin-bottom:10px}
+.emi:focus{border-color:#d97706}
+.emb{display:flex;gap:8px;margin-top:4px}
+.emb button{flex:1;padding:11px;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer}
+/* Settings */
+.set-hdr{background:linear-gradient(135deg,#374151,#1f2937);padding:max(env(safe-area-inset-top),14px) 16px 14px;color:#fff;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.set-hdr h2{font-size:18px;font-weight:800;margin:0;flex:1}
+.set-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f2f2f7;padding:16px}
+.set-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:12px}
+.set-card h3{font-size:14px;font-weight:800;color:#1c1c1e;margin:0 0 4px}
+.set-card p{font-size:11px;color:#888;line-height:1.5;margin:0 0 14px}
+.si{width:100%;padding:10px 12px;border:2px solid #e5e5ea;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;margin-bottom:10px}
+.si:focus{border-color:#6366f1}
+.sbtn{width:100%;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<!-- ═══ PRICE LIST ═══ -->
+<div id="priceView" class="view on">
+  <div class="hero">
+    <div class="hero-row">
+      <div><h1>ASR Price List</h1><p id="syncStatus">Tap qty + add to cart</p></div>
+      <div class="hero-btns">
+        <button class="hb" onclick="openSettings()">⚙️</button>
+        <button class="hb" id="cartBtn" onclick="showCart()">🛒 <span id="cartCount">0</span></button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input class="search" id="priceSearch" type="text" placeholder="Search fittings, pipe, valves…" oninput="onSearch()" onfocus="onSearch()" onblur="setTimeout(()=>closeSuggest(),200)">
+      <div class="suggest" id="suggestBox"></div>
+    </div>
+  </div>
+  <div class="list">
+    <div class="add-row">
+      <div class="add-hdr"><span>⭐ Add New Product</span></div>
+      <div class="add-body">
+        <input id="addName" class="ai" type="text" placeholder="Product name…" maxlength="80">
+        <div class="add-fields">
+          <div class="pw"><span>$</span><input id="addPrice" class="pi" type="number" min="0" step="0.01" placeholder="0.00"></div>
+          <select id="addUnit" class="us"><option value="ea">ea</option><option value="ft">ft</option><option value="lot">lot</option><option value="hr">hr</option><option value="bag">bag</option><option value="job">job</option></select>
+          <select id="addCat" class="cs"></select>
+          <button class="abtn" onclick="addProduct()">+ Add</button>
+        </div>
+      </div>
+    </div>
+    <div id="priceListEl"></div>
+  </div>
+</div>
+
+<!-- ═══ CART ═══ -->
+<div id="cartView" class="view">
+  <div class="cart-hdr">
+    <button class="bb" onclick="showList()">←</button>
+    <h2>Cart / Quote</h2>
+    <button class="cb" onclick="clearCart()">Clear</button>
+  </div>
+  <div class="cart-scroll">
+    <div id="cartItems"></div>
+    <div id="cartTotal" class="summary"></div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div id="settingsView" class="view">
+  <div class="set-hdr"><button class="bb" onclick="closeSettings()">←</button><h2>Sync Settings</h2></div>
+  <div class="set-scroll">
+    <div class="set-card"><h3>☁️ GitHub Sync</h3><p>Share products between devices via GitHub.</p>
+      <label>GitHub Username / Org</label><input id="ghOwner" class="si" type="text" placeholder="e.g. mycompany">
+      <label>Repository Name</label><input id="ghRepo" class="si" type="text" placeholder="e.g. asr-pricing">
+      <label>Personal Access Token</label><input id="ghToken" class="si" type="password" placeholder="ghp_xxxxxxxxxxxx">
+      <button class="sbtn" style="background:#4f46e5;color:#fff" onclick="saveGH()">Save & Sync</button>
+      <button class="sbtn" style="background:#f2f2f7;color:#4f46e5" onclick="testSync()">Test Connection</button>
+      <div id="ghStatus" style="margin-top:8px;font-size:11px;color:#888;text-align:center;min-height:18px"></div>
+    </div>
+    <div class="set-card"><h3>🗑 Reset</h3>
+      <button class="sbtn" style="background:#fee2e2;color:#dc2626" onclick="resetAll()">Clear All Custom Products</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EDIT MODAL ═══ -->
+<div id="editModal" class="emo" style="display:none" onpointerdown="closeEditModal()">
+  <div class="emc" onpointerdown="event.stopPropagation()">
+    <h3 id="emTitle">Edit</h3>
+    <label id="emLabel1">Name</label><input id="emName" class="emi" type="text">
+    <label>Price</label><input id="emPrice" class="emi" type="number" step="0.01" min="0">
+    <label>Unit</label>
+    <select id="emUnit" class="emi" style="font-size:14px"><option value="ea">ea</option><option value="ft">ft</option><option value="lot">lot</option><option value="hr">hr</option><option value="bag">bag</option><option value="job">job</option></select>
+    <label>Category</label><input id="emCat" class="emi" type="text">
+    <div class="emb">
+      <button style="background:#f5f5f5;color:#666" onclick="closeEditModal()">Cancel</button>
+      <button style="background:#222;color:#fff" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RENAME CAT MODAL ═══ -->
+<div id="renameModal" class="emo" style="display:none" onpointerdown="closeRename()">
+  <div class="emc" onpointerdown="event.stopPropagation()">
+    <h3>Rename Category</h3>
+    <label>Category Name</label><input id="rmName" class="emi" type="text">
+    <div class="emb">
+      <button style="background:#f5f5f5;color:#666" onclick="closeRename()">Cancel</button>
+      <button style="background:#222;color:#fff" onclick="saveRename()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRICE_DATA = [
+  // ── 1/2" Pipe ──
+  { cat: '1/2" Pipe', name: 'Counter Strike pipe', unit: 'ft', price: 4.50 },
+  { cat: '1/2" Pipe', name: 'M copper pipe', unit: 'ft', price: 2.24 },
+  { cat: '1/2" Pipe', name: 'L copper pipe', unit: 'ft', price: 3.01 },
+  { cat: '1/2" Pipe', name: 'PEX pipe', unit: 'ft', price: 0.75 },
+  { cat: '1/2" Pipe', name: 'Black pipe', unit: 'ft', price: 1.75 },
+  // ── 1/2" Sweat Fittings ──
+  { cat: '1/2" Sweat', name: '90° elbow', unit: 'ea', price: 1.06 },
+  { cat: '1/2" Sweat', name: 'St. 90° elbow', unit: 'ea', price: 1.60 },
+  { cat: '1/2" Sweat', name: '45° elbow', unit: 'ea', price: 1.92 },
+  { cat: '1/2" Sweat', name: 'St. 45° elbow', unit: 'ea', price: 2.28 },
+  { cat: '1/2" Sweat', name: 'Coupling', unit: 'ea', price: 0.79 },
+  { cat: '1/2" Sweat', name: 'Tee', unit: 'ea', price: 1.79 },
+  { cat: '1/2" Sweat', name: 'Female adapter', unit: 'ea', price: 3.48 },
+  { cat: '1/2" Sweat', name: 'Male adapter', unit: 'ea', price: 2.19 },
+  { cat: '1/2" Sweat', name: 'Gate valve', unit: 'ea', price: 12.54 },
+  { cat: '1/2" Sweat', name: 'Ball valve', unit: 'ea', price: 8.61 },
+  { cat: '1/2" Sweat', name: 'Male boiler drain', unit: 'ea', price: 9.40 },
+  { cat: '1/2" Sweat', name: 'Cap', unit: 'ea', price: 0.77 },
+  { cat: '1/2" Sweat', name: 'Swt x pro pex', unit: 'ea', price: 2.95 },
+  { cat: '1/2" Sweat', name: 'Swt x female drop ear', unit: 'ea', price: 2.96 },
+  // ── 1/2" Pro Press ──
+  { cat: '1/2" Pro Press', name: '90° elbow', unit: 'ea', price: 2.85 },
+  { cat: '1/2" Pro Press', name: 'St. 90° elbow', unit: 'ea', price: 2.76 },
+  { cat: '1/2" Pro Press', name: 'Coupling', unit: 'ea', price: 2.56 },
+  { cat: '1/2" Pro Press', name: 'Slip coupling', unit: 'ea', price: 6.33 },
+  { cat: '1/2" Pro Press', name: '45° elbow', unit: 'ea', price: 3.44 },
+  { cat: '1/2" Pro Press', name: 'St. 45° elbow', unit: 'ea', price: 2.71 },
+  { cat: '1/2" Pro Press', name: 'Tee', unit: 'ea', price: 4.33 },
+  { cat: '1/2" Pro Press', name: 'Male adapter', unit: 'ea', price: 3.29 },
+  { cat: '1/2" Pro Press', name: 'Female adapter', unit: 'ea', price: 4.10 },
+  { cat: '1/2" Pro Press', name: 'Ball valve', unit: 'ea', price: 35.78 },
+  { cat: '1/2" Pro Press', name: 'Cap', unit: 'ea', price: 5.43 },
+  // ── 1/2" Pro Pex ──
+  { cat: '1/2" Pro Pex', name: '90° elbow', unit: 'ea', price: 1.72 },
+  { cat: '1/2" Pro Pex', name: 'Coupling', unit: 'ea', price: 1.40 },
+  { cat: '1/2" Pro Pex', name: 'Ball valve', unit: 'ea', price: 11.54 },
+  { cat: '1/2" Pro Pex', name: 'Rings', unit: 'ea', price: 0.24 },
+  { cat: '1/2" Pro Pex', name: 'IPS drop ear', unit: 'ea', price: 11.54 },
+  { cat: '1/2" Pro Pex', name: 'Female adapter', unit: 'ea', price: 8.41 },
+  { cat: '1/2" Pro Pex', name: 'Male adapter', unit: 'ea', price: 4.09 },
+  { cat: '1/2" Pro Pex', name: 'Plug', unit: 'ea', price: 1.11 },
+  { cat: '1/2" Pro Pex', name: 'Pro press x pro pex', unit: 'ea', price: 4.69 },
+  // ── 1/2" Black ──
+  { cat: '1/2" Black', name: '90° elbow', unit: 'ea', price: 1.10 },
+  { cat: '1/2" Black', name: 'St. 90° elbow', unit: 'ea', price: 2.30 },
+  { cat: '1/2" Black', name: 'Tee', unit: 'ea', price: 1.43 },
+  { cat: '1/2" Black', name: 'Union', unit: 'ea', price: 5.16 },
+  { cat: '1/2" Black', name: 'Cap', unit: 'ea', price: 1.17 },
+  { cat: '1/2" Black', name: 'IPS ball valve', unit: 'ea', price: 11.55 },
+  { cat: '1/2" Black', name: 'Nipple', unit: 'ea', price: 1.83 },
+  { cat: '1/2" Black', name: 'Plug', unit: 'ea', price: 1.08 },
+  { cat: '1/2" Black', name: '45° elbow', unit: 'ea', price: 2.08 },
+  { cat: '1/2" Black', name: 'Gas cock', unit: 'ea', price: 9.46 },
+  { cat: '1/2" Black', name: 'Male counter strike', unit: 'ea', price: 16.54 },
+  { cat: '1/2" Black', name: 'Coupling', unit: 'ea', price: 1.58 },
+  // ── 3/4" Pipe ──
+  { cat: '3/4" Pipe', name: 'M copper pipe', unit: 'ft', price: 3.62 },
+  { cat: '3/4" Pipe', name: 'L copper pipe', unit: 'ft', price: 4.92 },
+  { cat: '3/4" Pipe', name: 'PEX pipe', unit: 'ft', price: 0.78 },
+  { cat: '3/4" Pipe', name: 'Black pipe', unit: 'ft', price: 1.71 },
+  { cat: '3/4" Pipe', name: 'Counter Strike pipe', unit: 'ft', price: 5.33 },
+  // ── 3/4" Sweat ──
+  { cat: '3/4" Sweat', name: '90° elbow', unit: 'ea', price: 4.53 },
+  { cat: '3/4" Sweat', name: 'St. 90° elbow', unit: 'ea', price: 3.38 },
+  { cat: '3/4" Sweat', name: '45° elbow', unit: 'ea', price: 3.25 },
+  { cat: '3/4" Sweat', name: 'St. 45° elbow', unit: 'ea', price: 3.29 },
+  { cat: '3/4" Sweat', name: 'Coupling', unit: 'ea', price: 1.58 },
+  { cat: '3/4" Sweat', name: 'Slip coupling', unit: 'ea', price: 2.16 },
+  { cat: '3/4" Sweat', name: 'Tee', unit: 'ea', price: 4.30 },
+  { cat: '3/4" Sweat', name: '3/4×3/4×1/2 tee', unit: 'ea', price: 4.10 },
+  { cat: '3/4" Sweat', name: '3/4×1/2×3/4 tee', unit: 'ea', price: 5.03 },
+  { cat: '3/4" Sweat', name: 'Cap', unit: 'ea', price: 1.42 },
+  { cat: '3/4" Sweat', name: '3/4×1/2 coupling', unit: 'ea', price: 2.80 },
+  { cat: '3/4" Sweat', name: 'Female adapter', unit: 'ea', price: 4.76 },
+  { cat: '3/4" Sweat', name: 'Male adapter', unit: 'ea', price: 3.67 },
+  { cat: '3/4" Sweat', name: 'Wing L', unit: 'ea', price: 9.16 },
+  { cat: '3/4" Sweat', name: 'Swt x IPS wing L', unit: 'ea', price: 11.73 },
+  { cat: '3/4" Sweat', name: 'Ball valve', unit: 'ea', price: 20.09 },
+  { cat: '3/4" Sweat', name: 'Gate valve', unit: 'ea', price: 24.37 },
+  { cat: '3/4" Sweat', name: 'Male boiler drain', unit: 'ea', price: 12.37 },
+  // ── 3/4" Pro Press ──
+  { cat: '3/4" Pro Press', name: '90° elbow', unit: 'ea', price: 4.59 },
+  { cat: '3/4" Pro Press', name: 'St. 90° elbow', unit: 'ea', price: 4.78 },
+  { cat: '3/4" Pro Press', name: 'Coupling', unit: 'ea', price: 3.88 },
+  { cat: '3/4" Pro Press', name: 'Slip coupling', unit: 'ea', price: 8.32 },
+  { cat: '3/4" Pro Press', name: 'Tee', unit: 'ea', price: 7.58 },
+  { cat: '3/4" Pro Press', name: '3/4×3/4×1/2 tee', unit: 'ea', price: 6.62 },
+  { cat: '3/4" Pro Press', name: '3/4×1/2×3/4 tee', unit: 'ea', price: 13.08 },
+  { cat: '3/4" Pro Press', name: '3/4×1/2×1/2 tee', unit: 'ea', price: 12.13 },
+  { cat: '3/4" Pro Press', name: '3/4×1/2 coupling', unit: 'ea', price: 11.72 },
+  { cat: '3/4" Pro Press', name: 'Ball valve', unit: 'ea', price: 35.18 },
+  { cat: '3/4" Pro Press', name: 'Female adapter', unit: 'ea', price: 6.38 },
+  { cat: '3/4" Pro Press', name: 'Male adapter', unit: 'ea', price: 5.89 },
+  { cat: '3/4" Pro Press', name: '45° elbow', unit: 'ea', price: 4.04 },
+  { cat: '3/4" Pro Press', name: 'St. 45° elbow', unit: 'ea', price: 3.84 },
+  { cat: '3/4" Pro Press', name: 'Cap', unit: 'ea', price: 9.32 },
+  { cat: '3/4" Pro Press', name: '3/4×1/2 bush', unit: 'ea', price: 3.02 },
+  { cat: '3/4" Pro Press', name: 'Pro press x pro pex', unit: 'ea', price: 8.31 },
+  // ── 3/4" Pro Pex ──
+  { cat: '3/4" Pro Pex', name: '90° elbow', unit: 'ea', price: 2.16 },
+  { cat: '3/4" Pro Pex', name: 'Coupling', unit: 'ea', price: 1.66 },
+  { cat: '3/4" Pro Pex', name: 'Male adapter', unit: 'ea', price: 7.34 },
+  { cat: '3/4" Pro Pex', name: 'Female adapter', unit: 'ea', price: 9.85 },
+  { cat: '3/4" Pro Pex', name: 'Swt adapter', unit: 'ea', price: 7.22 },
+  { cat: '3/4" Pro Pex', name: 'Plug', unit: 'ea', price: 1.71 },
+  { cat: '3/4" Pro Pex', name: 'Ball valve', unit: 'ea', price: 18.45 },
+  { cat: '3/4" Pro Pex', name: 'Rings', unit: 'ea', price: 0.47 },
+  { cat: '3/4" Pro Pex', name: '3/4×1/2 coupling', unit: 'ea', price: 2.93 },
+  { cat: '3/4" Pro Pex', name: 'Tee', unit: 'ea', price: 2.80 },
+  { cat: '3/4" Pro Pex', name: '3/4×3/4×1/2 tee', unit: 'ea', price: 2.27 },
+  { cat: '3/4" Pro Pex', name: '3/4×1/2×1/2 tee', unit: 'ea', price: 2.70 },
+  { cat: '3/4" Pro Pex', name: '3/4×1/2×3/4 tee', unit: 'ea', price: 2.80 },
+  // ── 3/4" Black ──
+  { cat: '3/4" Black', name: '90° elbow', unit: 'ea', price: 1.41 },
+  { cat: '3/4" Black', name: 'Coupling', unit: 'ea', price: 1.89 },
+  { cat: '3/4" Black', name: 'Cap', unit: 'ea', price: 1.60 },
+  { cat: '3/4" Black', name: 'Union', unit: 'ea', price: 6.14 },
+  { cat: '3/4" Black', name: '3/4×1/2 coupling', unit: 'ea', price: 1.89 },
+  { cat: '3/4" Black', name: 'Plug', unit: 'ea', price: 1.16 },
+  { cat: '3/4" Black', name: 'Tee', unit: 'ea', price: 2.18 },
+  { cat: '3/4" Black', name: '3/4×1/2 bush', unit: 'ea', price: 1.91 },
+  { cat: '3/4" Black', name: 'Nipple', unit: 'ea', price: 3.40 },
+  { cat: '3/4" Black', name: '45° elbow', unit: 'ea', price: 2.53 },
+  { cat: '3/4" Black', name: 'St. 90° elbow', unit: 'ea', price: 2.57 },
+  { cat: '3/4" Black', name: 'St. 45° elbow', unit: 'ea', price: 4.34 },
+  { cat: '3/4" Black', name: '3/4×3/4×1/2 tee', unit: 'ea', price: 3.37 },
+  { cat: '3/4" Black', name: '3/4×1/2×1/2 tee', unit: 'ea', price: 3.75 },
+  { cat: '3/4" Black', name: '3/4×1/2×3/4 tee', unit: 'ea', price: 4.32 },
+  { cat: '3/4" Black', name: 'Male x Counter Strike', unit: 'ea', price: 24.13 },
+  // ── 1" Pipe ──
+  { cat: '1" Pipe', name: 'M copper pipe', unit: 'ft', price: 5.52 },
+  { cat: '1" Pipe', name: 'L copper pipe', unit: 'ft', price: 7.23 },
+  { cat: '1" Pipe', name: 'PEX pipe', unit: 'ft', price: 1.64 },
+  { cat: '1" Pipe', name: 'Black pipe', unit: 'ft', price: 1.81 },
+  { cat: '1" Pipe', name: 'Counter Strike pipe', unit: 'ft', price: 6.85 },
+  // ── 1" Sweat ──
+  { cat: '1" Sweat', name: '90° elbow', unit: 'ea', price: 5.75 },
+  { cat: '1" Sweat', name: 'St. 90° elbow', unit: 'ea', price: 8.66 },
+  { cat: '1" Sweat', name: '45° elbow', unit: 'ea', price: 8.17 },
+  { cat: '1" Sweat', name: 'St. 45° elbow', unit: 'ea', price: 11.00 },
+  { cat: '1" Sweat', name: 'Coupling', unit: 'ea', price: 3.15 },
+  { cat: '1" Sweat', name: 'Slip coupling', unit: 'ea', price: 4.54 },
+  { cat: '1" Sweat', name: 'Male adapter', unit: 'ea', price: 9.38 },
+  { cat: '1" Sweat', name: 'Female adapter', unit: 'ea', price: 10.88 },
+  { cat: '1" Sweat', name: 'Gate valve', unit: 'ea', price: 24.68 },
+  { cat: '1" Sweat', name: 'Ball valve', unit: 'ea', price: 30.34 },
+  { cat: '1" Sweat', name: '1×1×1/2 tee', unit: 'ea', price: 13.20 },
+  { cat: '1" Sweat', name: 'Tee', unit: 'ea', price: 12.90 },
+  { cat: '1" Sweat', name: '1×1/2×1 tee', unit: 'ea', price: 15.70 },
+  { cat: '1" Sweat', name: '1×1×3/4 tee', unit: 'ea', price: 13.20 },
+  { cat: '1" Sweat', name: '1×3/4×3/4 tee', unit: 'ea', price: 15.70 },
+  { cat: '1" Sweat', name: '1×1/2 bush', unit: 'ea', price: 5.49 },
+  { cat: '1" Sweat', name: '1×3/4 bush', unit: 'ea', price: 4.30 },
+  // ── 1" Pro Press ──
+  { cat: '1" Pro Press', name: '90° elbow', unit: 'ea', price: 9.15 },
+  { cat: '1" Pro Press', name: 'St. 90° elbow', unit: 'ea', price: 10.91 },
+  { cat: '1" Pro Press', name: '45° elbow', unit: 'ea', price: 12.84 },
+  { cat: '1" Pro Press', name: 'St. 45° elbow', unit: 'ea', price: 12.52 },
+  { cat: '1" Pro Press', name: 'Coupling', unit: 'ea', price: 7.77 },
+  { cat: '1" Pro Press', name: 'Slip coupling', unit: 'ea', price: 10.57 },
+  { cat: '1" Pro Press', name: 'Male adapter', unit: 'ea', price: 10.98 },
+  { cat: '1" Pro Press', name: 'Female adapter', unit: 'ea', price: 12.20 },
+  { cat: '1" Pro Press', name: 'Ball valve', unit: 'ea', price: 46.93 },
+  { cat: '1" Pro Press', name: 'Tee', unit: 'ea', price: 13.89 },
+  { cat: '1" Pro Press', name: 'Cap', unit: 'ea', price: 14.36 },
+  { cat: '1" Pro Press', name: '1×3/4 bush', unit: 'ea', price: 7.94 },
+  { cat: '1" Pro Press', name: '1×3/4 coupling', unit: 'ea', price: 13.69 },
+  // ── 1" Pro Pex ──
+  { cat: '1" Pro Pex', name: '90° elbow', unit: 'ea', price: 4.52 },
+  { cat: '1" Pro Pex', name: 'Coupling', unit: 'ea', price: 2.45 },
+  { cat: '1" Pro Pex', name: 'Plug', unit: 'ea', price: 2.46 },
+  { cat: '1" Pro Pex', name: 'Rings', unit: 'ea', price: 1.01 },
+  { cat: '1" Pro Pex', name: 'Tee', unit: 'ea', price: 5.09 },
+  { cat: '1" Pro Pex', name: 'Ball valve', unit: 'ea', price: 29.08 },
+  { cat: '1" Pro Pex', name: 'Male adapter', unit: 'ea', price: 15.13 },
+  { cat: '1" Pro Pex', name: 'Female adapter', unit: 'ea', price: 20.44 },
+  { cat: '1" Pro Pex', name: 'Swt adapter', unit: 'ea', price: 11.07 },
+  { cat: '1" Pro Pex', name: 'IPS drop ear', unit: 'ea', price: 37.96 },
+  { cat: '1" Pro Pex', name: '1×3/4 coupling', unit: 'ea', price: 3.80 },
+  { cat: '1" Pro Pex', name: 'Press x Pex adapter', unit: 'ea', price: 14.69 },
+  // ── 1" Black ──
+  { cat: '1" Black', name: '90° elbow', unit: 'ea', price: 2.48 },
+  { cat: '1" Black', name: 'St. 90° elbow', unit: 'ea', price: 3.69 },
+  { cat: '1" Black', name: 'Coupling', unit: 'ea', price: 2.86 },
+  { cat: '1" Black', name: 'Union', unit: 'ea', price: 8.02 },
+  { cat: '1" Black', name: 'Tee', unit: 'ea', price: 3.85 },
+  { cat: '1" Black', name: '45° elbow', unit: 'ea', price: 3.23 },
+  { cat: '1" Black', name: 'St. 45° elbow', unit: 'ea', price: 5.04 },
+  { cat: '1" Black', name: '1×3/4 coupling', unit: 'ea', price: 2.93 },
+  { cat: '1" Black', name: '1×1/2 coupling', unit: 'ea', price: 3.15 },
+  { cat: '1" Black', name: 'Nipple', unit: 'ea', price: 1.67 },
+  { cat: '1" Black', name: 'Counter Strike adapter', unit: 'ea', price: 38.11 },
+  // ── 1.5" PVC DWV ──
+  { cat: '1-1/2" PVC DWV', name: 'Foam core pipe', unit: 'ft', price: 0.66 },
+  { cat: '1-1/2" PVC DWV', name: '90° elbow', unit: 'ea', price: 0.96 },
+  { cat: '1-1/2" PVC DWV', name: 'St. 90° elbow', unit: 'ea', price: 1.24 },
+  { cat: '1-1/2" PVC DWV', name: '45° elbow', unit: 'ea', price: 0.94 },
+  { cat: '1-1/2" PVC DWV', name: 'St. 45° elbow', unit: 'ea', price: 0.90 },
+  { cat: '1-1/2" PVC DWV', name: 'Coupling', unit: 'ea', price: 0.45 },
+  { cat: '1-1/2" PVC DWV', name: 'Fernco', unit: 'ea', price: 5.46 },
+  { cat: '1-1/2" PVC DWV', name: 'Tee', unit: 'ea', price: 1.68 },
+  { cat: '1-1/2" PVC DWV', name: 'Trap', unit: 'ea', price: 3.55 },
+  { cat: '1-1/2" PVC DWV', name: '22.5° elbow', unit: 'ea', price: 1.33 },
+  { cat: '1-1/2" PVC DWV', name: '60° elbow', unit: 'ea', price: 2.23 },
+  { cat: '1-1/2" PVC DWV', name: 'Male adapter', unit: 'ea', price: 1.05 },
+  { cat: '1-1/2" PVC DWV', name: 'Female adapter', unit: 'ea', price: 1.04 },
+  { cat: '1-1/2" PVC DWV', name: 'Male marvel', unit: 'ea', price: 2.37 },
+  { cat: '1-1/2" PVC DWV', name: 'Cleanout', unit: 'ea', price: 2.31 },
+  { cat: '1-1/2" PVC DWV', name: 'Cap', unit: 'ea', price: 0.53 },
+  { cat: '1-1/2" PVC DWV', name: 'St. 22° elbow', unit: 'ea', price: 4.36 },
+  { cat: '1-1/2" PVC DWV', name: 'Test tee', unit: 'ea', price: 5.19 },
+  { cat: '1-1/2" PVC DWV', name: 'J hook', unit: 'ea', price: 0.62 },
+  { cat: '1-1/2" PVC DWV', name: 'Strut clamp', unit: 'ea', price: 2.86 },
+  // ── 2" PVC DWV ──
+  { cat: '2" PVC DWV', name: 'Foam core pipe', unit: 'ft', price: 0.65 },
+  { cat: '2" PVC DWV', name: 'Solid core pipe', unit: 'ft', price: 0.75 },
+  { cat: '2" PVC DWV', name: '90° elbow', unit: 'ea', price: 1.85 },
+  { cat: '2" PVC DWV', name: 'St. 90° elbow', unit: 'ea', price: 1.91 },
+  { cat: '2" PVC DWV', name: '45° elbow', unit: 'ea', price: 1.71 },
+  { cat: '2" PVC DWV', name: 'St. 45° elbow', unit: 'ea', price: 1.75 },
+  { cat: '2" PVC DWV', name: 'Coupling', unit: 'ea', price: 0.76 },
+  { cat: '2" PVC DWV', name: 'Fernco', unit: 'ea', price: 5.87 },
+  { cat: '2" PVC DWV', name: 'Tee', unit: 'ea', price: 2.46 },
+  { cat: '2" PVC DWV', name: 'Trap', unit: 'ea', price: 4.33 },
+  { cat: '2" PVC DWV', name: '2×2×1-1/2 tee', unit: 'ea', price: 2.18 },
+  { cat: '2" PVC DWV', name: 'Inside pipe coupling', unit: 'ea', price: 16.48 },
+  { cat: '2" PVC DWV', name: '22° elbow', unit: 'ea', price: 1.58 },
+  { cat: '2" PVC DWV', name: 'St. 22° elbow', unit: 'ea', price: 3.87 },
+  { cat: '2" PVC DWV', name: '60° elbow', unit: 'ea', price: 2.60 },
+  { cat: '2" PVC DWV', name: '2×1-1/2 bush', unit: 'ea', price: 0.79 },
+  { cat: '2" PVC DWV', name: 'Wye', unit: 'ea', price: 3.00 },
+  { cat: '2" PVC DWV', name: '2×1-1/2 wye', unit: 'ea', price: 3.67 },
+  { cat: '2" PVC DWV', name: 'Male adapter', unit: 'ea', price: 1.41 },
+  { cat: '2" PVC DWV', name: 'Female adapter', unit: 'ea', price: 1.78 },
+  { cat: '2" PVC DWV', name: 'J hook', unit: 'ea', price: 0.71 },
+  { cat: '2" PVC DWV', name: '2×1-1/2 double tee', unit: 'ea', price: 3.91 },
+  { cat: '2" PVC DWV', name: 'Cleanout', unit: 'ea', price: 2.88 },
+  { cat: '2" PVC DWV', name: 'Shower brass strainer', unit: 'ea', price: 29.16 },
+  { cat: '2" PVC DWV', name: 'AAV', unit: 'ea', price: 12.78 },
+  { cat: '2" PVC DWV', name: 'No hub adapter', unit: 'ea', price: 2.37 },
+  { cat: '2" PVC DWV', name: 'Test tee', unit: 'ea', price: 6.02 },
+  { cat: '2" PVC DWV', name: 'Strut clamp', unit: 'ea', price: 3.39 },
+  // ── 3" PVC SCH 40 ──
+  { cat: '3" PVC SCH 40', name: 'Foam core pipe', unit: 'ft', price: 1.19 },
+  { cat: '3" PVC SCH 40', name: '90° elbow', unit: 'ea', price: 4.44 },
+  { cat: '3" PVC SCH 40', name: 'St. 90° elbow', unit: 'ea', price: 5.30 },
+  { cat: '3" PVC SCH 40', name: '45° elbow', unit: 'ea', price: 3.98 },
+  { cat: '3" PVC SCH 40', name: 'St. 45° elbow', unit: 'ea', price: 4.56 },
+  { cat: '3" PVC SCH 40', name: 'Coupling', unit: 'ea', price: 2.16 },
+  { cat: '3" PVC SCH 40', name: 'Slip coupling', unit: 'ea', price: 4.37 },
+  { cat: '3" PVC SCH 40', name: 'Wye', unit: 'ea', price: 8.11 },
+  { cat: '3" PVC SCH 40', name: 'Tee', unit: 'ea', price: 6.48 },
+  { cat: '3" PVC SCH 40', name: '3×2 wye', unit: 'ea', price: 6.00 },
+  { cat: '3" PVC SCH 40', name: '3×1-1/2 wye', unit: 'ea', price: 5.42 },
+  { cat: '3" PVC SCH 40', name: '3×2 tee', unit: 'ea', price: 4.88 },
+  { cat: '3" PVC SCH 40', name: '3×1-1/2 tee', unit: 'ea', price: 4.70 },
+  { cat: '3" PVC SCH 40', name: 'J hook', unit: 'ea', price: 0.83 },
+  { cat: '3" PVC SCH 40', name: '3×2 Fernco', unit: 'ea', price: 8.08 },
+  { cat: '3" PVC SCH 40', name: '30×40 bush', unit: 'ea', price: 10.21 },
+  { cat: '3" PVC SCH 40', name: 'Trap', unit: 'ea', price: 14.62 },
+  { cat: '3" PVC SCH 40', name: '3×2 coupling', unit: 'ea', price: 3.13 },
+  { cat: '3" PVC SCH 40', name: 'Fernco', unit: 'ea', price: 7.93 },
+  { cat: '3" PVC SCH 40', name: 'Cap', unit: 'ea', price: 4.86 },
+  { cat: '3" PVC SCH 40', name: 'Test tee', unit: 'ea', price: 9.42 },
+  { cat: '3" PVC SCH 40', name: 'St. 22° elbow', unit: 'ea', price: 6.03 },
+  { cat: '3" PVC SCH 40', name: '22° elbow', unit: 'ea', price: 3.90 },
+  { cat: '3" PVC SCH 40', name: 'S hook', unit: 'ea', price: 1.64 },
+  { cat: '3" PVC SCH 40', name: 'Strut clamp', unit: 'ea', price: 4.29 },
+  // ── 3" DWV SCH 30 ──
+  { cat: '3" DWV SCH 30', name: 'Pipe', unit: 'ft', price: 1.30 },
+  { cat: '3" DWV SCH 30', name: '90° elbow', unit: 'ea', price: 6.71 },
+  { cat: '3" DWV SCH 30', name: 'St. 90° elbow', unit: 'ea', price: 8.52 },
+  { cat: '3" DWV SCH 30', name: '45° elbow', unit: 'ea', price: 5.91 },
+  { cat: '3" DWV SCH 30', name: 'St. 45° elbow', unit: 'ea', price: 6.25 },
+  { cat: '3" DWV SCH 30', name: 'Coupling', unit: 'ea', price: 2.99 },
+  { cat: '3" DWV SCH 30', name: 'Fernco', unit: 'ea', price: 7.93 },
+  { cat: '3" DWV SCH 30', name: 'Wye', unit: 'ea', price: 10.71 },
+  { cat: '3" DWV SCH 30', name: '3×2 wye', unit: 'ea', price: 9.97 },
+  { cat: '3" DWV SCH 30', name: '3×1-1/2 wye', unit: 'ea', price: 10.21 },
+  { cat: '3" DWV SCH 30', name: 'Tee', unit: 'ea', price: 10.16 },
+  { cat: '3" DWV SCH 30', name: '3×2 tee', unit: 'ea', price: 8.74 },
+  { cat: '3" DWV SCH 30', name: '3×1-1/2 tee', unit: 'ea', price: 8.60 },
+  { cat: '3" DWV SCH 30', name: '22° elbow', unit: 'ea', price: 7.97 },
+  { cat: '3" DWV SCH 30', name: '3×2 coupling', unit: 'ea', price: 6.81 },
+  { cat: '3" DWV SCH 30', name: 'Flange', unit: 'ea', price: 11.43 },
+  { cat: '3" DWV SCH 30', name: '30×40 bush', unit: 'ea', price: 10.21 },
+  // ── 4" PVC ──
+  { cat: '4" PVC', name: 'Foam core pipe', unit: 'ft', price: 1.75 },
+  { cat: '4" PVC', name: '90° elbow', unit: 'ea', price: 8.77 },
+  { cat: '4" PVC', name: 'St. 90° elbow', unit: 'ea', price: 8.87 },
+  { cat: '4" PVC', name: '45° elbow', unit: 'ea', price: 7.29 },
+  { cat: '4" PVC', name: 'St. 45° elbow', unit: 'ea', price: 6.46 },
+  { cat: '4" PVC', name: 'Coupling', unit: 'ea', price: 3.66 },
+  { cat: '4" PVC', name: 'Fernco', unit: 'ea', price: 9.92 },
+  { cat: '4" PVC', name: '4×3 wye', unit: 'ea', price: 11.94 },
+  { cat: '4" PVC', name: '4×2 wye', unit: 'ea', price: 8.81 },
+  { cat: '4" PVC', name: 'Wye', unit: 'ea', price: 14.71 },
+  { cat: '4" PVC', name: '22° elbow', unit: 'ea', price: 6.16 },
+  { cat: '4" PVC', name: 'Cleanout w/ plug', unit: 'ea', price: 7.43 },
+  { cat: '4" PVC', name: 'Trap', unit: 'ea', price: 35.20 },
+  { cat: '4" PVC', name: '4×3 bush SCH 40', unit: 'ea', price: 3.38 },
+  { cat: '4" PVC', name: '4×3 bush SCH 30', unit: 'ea', price: 9.80 },
+  { cat: '4" PVC', name: '60° elbow', unit: 'ea', price: 12.79 },
+  { cat: '4" PVC', name: 'J hook', unit: 'ea', price: 1.49 },
+  { cat: '4" PVC', name: 'Test tee', unit: 'ea', price: 19.87 },
+  { cat: '4" PVC', name: 'Slab flange', unit: 'ea', price: 4.38 },
+  { cat: '4" PVC', name: 'Back water valve', unit: 'ea', price: 94.68 },
+  { cat: '4" PVC', name: '4×3 coupling', unit: 'ea', price: 6.55 },
+  { cat: '4" PVC', name: 'Cap', unit: 'ea', price: 11.04 },
+  { cat: '4" PVC', name: 'Tub box', unit: 'ea', price: 8.09 },
+  { cat: '4" PVC', name: 'PVC x no hub', unit: 'ea', price: 4.42 },
+  { cat: '4" PVC', name: 'Female adapter', unit: 'ea', price: 5.04 },
+  { cat: '4" PVC', name: 'Strut clamp', unit: 'ea', price: 7.21 },
+  { cat: '4" PVC', name: 'Tear drop hanger', unit: 'ea', price: 12.79 },
+  // ── Viega MegaPress-G Gas Fittings (Etna Supply Quote S106388537) ──
+  // 1/2" MegaPress-G
+  { cat: '1/2" MegaPress-G', name: '90° elbow (PxP) HNBR', unit: 'ea', price: 15.94 },
+  { cat: '1/2" MegaPress-G', name: 'St. 90° elbow', unit: 'ea', price: 16.76 },
+  { cat: '1/2" MegaPress-G', name: '45° elbow (PxP) HNBR', unit: 'ea', price: 17.12 },
+  { cat: '1/2" MegaPress-G', name: 'St. 45° elbow (FtgxP) HNBR', unit: 'ea', price: 17.12 },
+  { cat: '1/2" MegaPress-G', name: 'Coupling w/ stop HNBR', unit: 'ea', price: 14.71 },
+  { cat: '1/2" MegaPress-G', name: 'Coupling no stop', unit: 'ea', price: 18.45 },
+  { cat: '1/2" MegaPress-G', name: 'Ball valve (bronze)', unit: 'ea', price: 76.49 },
+  { cat: '1/2" MegaPress-G', name: 'Male adapter (PxM NPT) HNBR', unit: 'ea', price: 21.05 },
+  { cat: '1/2" MegaPress-G', name: 'Female adapter HNBR', unit: 'ea', price: 18.88 },
+  // 3/4" MegaPress-G
+  { cat: '3/4" MegaPress-G', name: '90° elbow (PxP) HNBR', unit: 'ea', price: 18.16 },
+  { cat: '3/4" MegaPress-G', name: 'St. 90° elbow (FtgxP)', unit: 'ea', price: 18.71 },
+  { cat: '3/4" MegaPress-G', name: '45° elbow (PxP) HNBR', unit: 'ea', price: 20.70 },
+  { cat: '3/4" MegaPress-G', name: 'St. 45° elbow (FtgxP) HNBR', unit: 'ea', price: 20.70 },
+  { cat: '3/4" MegaPress-G', name: 'Coupling w/ stop HNBR', unit: 'ea', price: 16.88 },
+  { cat: '3/4" MegaPress-G', name: 'Coupling no stop', unit: 'ea', price: 21.05 },
+  { cat: '3/4" MegaPress-G', name: 'Ball valve (bronze)', unit: 'ea', price: 86.80 },
+  { cat: '3/4" MegaPress-G', name: 'Male adapter (PxM NPT) HNBR', unit: 'ea', price: 22.88 },
+  { cat: '3/4" MegaPress-G', name: 'Female adapter (PxF NPT) HNBR', unit: 'ea', price: 21.61 },
+  // 1" MegaPress-G
+  { cat: '1" MegaPress-G', name: '90° elbow (PxP) HNBR', unit: 'ea', price: 22.06 },
+  { cat: '1" MegaPress-G', name: 'St. 90° elbow (FtgxP)', unit: 'ea', price: 22.72 },
+  { cat: '1" MegaPress-G', name: '45° elbow (PxP) HNBR', unit: 'ea', price: 25.86 },
+  { cat: '1" MegaPress-G', name: 'St. 45° elbow (FtgxP)', unit: 'ea', price: 25.86 },
+  { cat: '1" MegaPress-G', name: 'Coupling w/ stop HNBR', unit: 'ea', price: 24.95 },
+  { cat: '1" MegaPress-G', name: 'Coupling w/o stop HNBR', unit: 'ea', price: 29.07 },
+  { cat: '1" MegaPress-G', name: 'Ball valve (bronze)', unit: 'ea', price: 100.60 },
+  { cat: '1" MegaPress-G', name: 'Male adapter (PxM NPT) HNBR', unit: 'ea', price: 28.66 },
+  { cat: '1" MegaPress-G', name: 'Female adapter (PxF NPT) HNBR', unit: 'ea', price: 28.44 },
+  // ── Supports ──
+  { cat: 'Supports', name: '1" copper nail hanger', unit: 'ea', price: 0.32 },
+  { cat: 'Supports', name: '1" copper bell hanger', unit: 'ea', price: 1.41 },
+  { cat: 'Supports', name: '1" copper strut clamp', unit: 'ea', price: 1.96 },
+  { cat: 'Supports', name: '1" copper tear drop', unit: 'ea', price: 2.36 },
+  { cat: 'Supports', name: '1" copper flat strap', unit: 'ea', price: 0.32 },
+  { cat: 'Supports', name: '1" copper mickey mouse strap', unit: 'ea', price: 0.41 },
+  { cat: 'Supports', name: '3/4" copper nail hanger', unit: 'ea', price: 0.21 },
+  { cat: 'Supports', name: '3/4" copper strut clamp', unit: 'ea', price: 1.80 },
+  { cat: 'Supports', name: '3/4" copper bell hanger', unit: 'ea', price: 1.27 },
+  { cat: 'Supports', name: '3/4" copper tear drop', unit: 'ea', price: 2.26 },
+  { cat: 'Supports', name: '3/4" copper flat strap', unit: 'ea', price: 0.30 },
+  { cat: 'Supports', name: '3/4" copper mickey mouse strap', unit: 'ea', price: 0.35 },
+  { cat: 'Supports', name: '1/2" copper nail hanger', unit: 'ea', price: 0.15 },
+  { cat: 'Supports', name: '1/2" copper strut clamp', unit: 'ea', price: 1.75 },
+  { cat: 'Supports', name: '1/2" copper bell hanger', unit: 'ea', price: 1.96 },
+  { cat: 'Supports', name: '1/2" copper tear drop', unit: 'ea', price: 2.36 },
+  { cat: 'Supports', name: '1/2" copper flat strap', unit: 'ea', price: 0.25 },
+  { cat: 'Supports', name: '1/2" copper mickey mouse strap', unit: 'ea', price: 0.28 },
+  // ── Finish Connections ──
+  { cat: 'Finish Connections', name: 'Wax seal', unit: 'ea', price: 1.67 },
+  { cat: 'Finish Connections', name: 'Johnny bolts', unit: 'ea', price: 7.00 },
+  { cat: 'Finish Connections', name: '1/2" escutcheons', unit: 'ea', price: 0.49 },
+  { cat: 'Finish Connections', name: '20" braided toilet supply', unit: 'ea', price: 4.65 },
+  { cat: 'Finish Connections', name: '20" braided lav supply', unit: 'ea', price: 3.51 },
+  { cat: 'Finish Connections', name: '1/2×3/8 compression angle stop', unit: 'ea', price: 9.65 },
+  { cat: 'Finish Connections', name: '1/2×1/4 compression angle stop', unit: 'ea', price: 8.81 },
+  { cat: 'Finish Connections', name: '1-1/2 bag traps', unit: 'ea', price: 3.03 },
+  { cat: 'Finish Connections', name: 'Slip continuous waste end outlet', unit: 'ea', price: 5.71 },
+  { cat: 'Finish Connections', name: '1-1/2 flat head tailpiece extension', unit: 'ea', price: 1.95 },
+  { cat: 'Finish Connections', name: '1-1/2 slip extension double sided', unit: 'ea', price: 1.69 },
+  { cat: 'Finish Connections', name: 'Basket strainer kitchen deep', unit: 'ea', price: 14.03 },
+  { cat: 'Finish Connections', name: '1/2" bumper', unit: 'ea', price: 12.93 },
+  { cat: 'Finish Connections', name: 'Dishwasher hose & connection 6\'', unit: 'ea', price: 10.05 },
+  { cat: 'Finish Connections', name: '6\' ice maker supply braided', unit: 'ea', price: 19.70 },
+  { cat: 'Finish Connections', name: 'Hose clamp', unit: 'ea', price: 2.00 },
+  { cat: 'Finish Connections', name: 'Dishwasher tee', unit: 'ea', price: 2.75 },
+  { cat: 'Finish Connections', name: 'Washing machine hoses', unit: 'ea', price: 17.25 },
+  { cat: 'Finish Connections', name: '1/2" pro pex x copper 90 stub out', unit: 'ea', price: 10.97 },
+  { cat: 'Finish Connections', name: 'Purple nurple', unit: 'ea', price: 0.62 },
+  { cat: 'Finish Connections', name: '10" Woodford sillcock', unit: 'ea', price: 45.50 },
+  { cat: 'Finish Connections', name: 'Laundry box', unit: 'ea', price: 70.00 },
+  { cat: 'Finish Connections', name: '1/2" pro pex step 1/4 turn', unit: 'ea', price: 10.80 },
+  { cat: 'Finish Connections', name: 'Hold rite bracket', unit: 'ea', price: 3.88 },
+  { cat: 'Finish Connections', name: 'Ice maker box Uponor', unit: 'ea', price: 50.71 },
+  { cat: 'Finish Connections', name: '1" vac breaker with unions', unit: 'ea', price: 188.24 },
+  // ── Fixtures ──
+  { cat: 'Fixtures', name: 'Kohler elongated toilet', unit: 'ea', price: 165.54 },
+  { cat: 'Fixtures', name: 'Kohler tank', unit: 'ea', price: 104.75 },
+  { cat: 'Fixtures', name: 'Elongated seat open', unit: 'ea', price: 28.92 },
+  { cat: 'Fixtures', name: 'Urinal flush valve', unit: 'ea', price: 262.42 },
+  { cat: 'Fixtures', name: 'Urinal flange', unit: 'ea', price: 16.70 },
+  { cat: 'Fixtures', name: '50 gal electric water heater', unit: 'ea', price: 520.00 },
+  { cat: 'Fixtures', name: '50 gal PV 40,000 BTU', unit: 'ea', price: 1300.15 },
+  { cat: 'Fixtures', name: '75 gal PV 75,000 BTU', unit: 'ea', price: 1645.00 },
+  { cat: 'Fixtures', name: '50 gal PV 65,000 BTU', unit: 'ea', price: 2559.38 },
+  { cat: 'Fixtures', name: '40 gal 40,000 BTU reg vent', unit: 'ea', price: 630.00 },
+  { cat: 'Fixtures', name: '10,000 valve', unit: 'ea', price: 53.04 },
+  { cat: 'Fixtures', name: 'Standard chrome trim', unit: 'ea', price: 122.73 },
+  { cat: 'Fixtures', name: 'Watco trip waste', unit: 'ea', price: 21.28 },
+  { cat: 'Fixtures', name: 'Sterling 60×32 tub w/ walls', unit: 'ea', price: 940.00 },
+  { cat: 'Fixtures', name: 'Chrome door clear glass 6×32 tub', unit: 'ea', price: 488.47 },
+  { cat: 'Fixtures', name: 'Oasis 60×30 shower w/ seat', unit: 'ea', price: 892.00 },
+  { cat: 'Fixtures', name: 'Shower door 60×30 chrome/clear', unit: 'ea', price: 535.00 },
+  { cat: 'Fixtures', name: 'Sterling 60×32 shower with wall', unit: 'ea', price: 690.00 },
+  { cat: 'Fixtures', name: 'Oasis 60×32 tub/shower w/ walls', unit: 'ea', price: 810.00 },
+  { cat: 'Fixtures', name: 'Oasis 60×32 shower w/ walls', unit: 'ea', price: 857.00 },
+  // ── ASR Water Heater Flat Rate (installed price) ──
+  { cat: 'ASR Water Heater Flat Rate', name: '40 gal Reg Vent (Nat Gas or Propane)', unit: 'job', price: 2500.00 },
+  { cat: 'ASR Water Heater Flat Rate', name: '50 gal 40k BTU Power Vent (Nat Gas or Propane)', unit: 'job', price: 4500.00 },
+  { cat: 'ASR Water Heater Flat Rate', name: '50 gal 65k BTU Power Vent (Nat Gas or Propane)', unit: 'job', price: 6000.00 },
+  { cat: 'ASR Water Heater Flat Rate', name: 'Navien 240-A Tankless (Nat Gas or Propane)', unit: 'job', price: 7000.00 },
+  // ── Pumps ──
+  { cat: 'Pumps', name: 'Liberty Sewage pump', unit: 'ea', price: 380.00 },
+  { cat: 'Pumps', name: 'Zoeller Sewage pump', unit: 'ea', price: 400.00 },
+  { cat: 'Pumps', name: 'Liberty SJ10 Sump Pump', unit: 'ea', price: 220.00 },
+];
+
+PRICE_DATA.forEach((item, i) => { item.idx = i; });
+
+// ── Edits stored as overrides in localStorage ──
+let priceEdits = {}; // { idx: { name, price, unit, cat, deleted } }
+try { priceEdits = JSON.parse(localStorage.getItem('asr_edits') || '{}'); } catch(e) {}
+let userProducts = [];
+try { userProducts = JSON.parse(localStorage.getItem('asr_user_products') || '[]'); } catch(e) {}
+userProducts.forEach(p => { const idx = PRICE_DATA.length; PRICE_DATA.push({ ...p, idx }); });
+
+function saveEdits() { localStorage.setItem('asr_edits', JSON.stringify(priceEdits)); }
+function saveUserProducts() { localStorage.setItem('asr_user_products', JSON.stringify(userProducts)); }
+
+// Get effective item (with edits applied)
+function getItem(idx) {
+  const base = PRICE_DATA[idx];
+  if (!base) return null;
+  const ed = priceEdits[idx];
+  if (ed?.deleted) return null;
+  return { ...base, ...(ed || {}), idx };
+}
+
+// All categories
+function getCats() {
+  const cats = new Set();
+  PRICE_DATA.forEach((item, i) => { const it = getItem(i); if (it) cats.add(it.cat); });
+  return [...cats];
+}
+
+// ── State ──
+let cart = [];
+let laborHoursVal = '';
+let laborTechsVal = '1';
+let editIdx = null; // item being edited
+let renameCat = null; // category being renamed
+
+function saveState() { try { localStorage.setItem('asr_cart', JSON.stringify(cart)); localStorage.setItem('asr_labor_hours', laborHoursVal); localStorage.setItem('asr_labor_techs', laborTechsVal); } catch(e) {} }
+function loadState() { try { const c = localStorage.getItem('asr_cart'); if (c) cart = JSON.parse(c); laborHoursVal = localStorage.getItem('asr_labor_hours') || ''; laborTechsVal = localStorage.getItem('asr_labor_techs') || '1'; } catch(e) {} }
+loadState();
+
+// ── GitHub ──
+let ghOwner = localStorage.getItem('asr_gh_owner') || '';
+let ghRepo = localStorage.getItem('asr_gh_repo') || '';
+let ghToken = localStorage.getItem('asr_gh_token') || '';
+
+// ── Views ──
+function showCart() { document.getElementById('priceView').classList.remove('on'); document.getElementById('cartView').classList.add('on'); renderCart(); }
+function showList() { document.getElementById('cartView').classList.remove('on'); document.getElementById('priceView').classList.add('on'); renderPriceList(); }
+function openSettings() { document.getElementById('priceView').classList.remove('on'); document.getElementById('settingsView').classList.add('on'); document.getElementById('ghOwner').value=ghOwner; document.getElementById('ghRepo').value=ghRepo; document.getElementById('ghToken').value=ghToken; }
+function closeSettings() { document.getElementById('settingsView').classList.remove('on'); document.getElementById('priceView').classList.add('on'); }
+
+// ── Search with auto-suggest ──
+function onSearch() {
+  const q = document.getElementById('priceSearch').value.toLowerCase().trim();
+  renderPriceList();
+  const box = document.getElementById('suggestBox');
+  if (q.length < 2) { box.classList.remove('on'); return; }
+  const matches = [];
+  PRICE_DATA.forEach((item, i) => {
+    const it = getItem(i);
+    if (!it) return;
+    if (it.name.toLowerCase().includes(q) || it.cat.toLowerCase().includes(q)) matches.push(it);
+  });
+  if (!matches.length) { box.classList.remove('on'); return; }
+  box.innerHTML = '';
+  matches.slice(0, 8).forEach(m => {
+    const d = document.createElement('div'); d.className = 'sug-item';
+    d.innerHTML = `${m.name} <span class="sc">· $${m.price.toFixed(2)}/${m.unit} · ${m.cat}</span>`;
+    d.onpointerdown = (e) => { e.preventDefault(); document.getElementById('priceSearch').value = m.name; closeSuggest(); renderPriceList(); };
+    box.appendChild(d);
+  });
+  box.classList.add('on');
+}
+function closeSuggest() { document.getElementById('suggestBox').classList.remove('on'); }
+
+// ── Populate category dropdown ──
+function populateCatDropdown() {
+  const sel = document.getElementById('addCat');
+  const cats = getCats();
+  sel.innerHTML = '';
+  cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  const o = document.createElement('option'); o.value = '__new__'; o.textContent = '+ New Category…'; sel.appendChild(o);
+}
+
+// ── Add product ──
+function addProduct() {
+  const name = document.getElementById('addName').value.trim();
+  const price = parseFloat(document.getElementById('addPrice').value);
+  const unit = document.getElementById('addUnit').value;
+  let cat = document.getElementById('addCat').value;
+  if (!name) { document.getElementById('addName').style.borderColor='#ef4444'; setTimeout(()=>document.getElementById('addName').style.borderColor='#e5e5ea',1800); return; }
+  if (isNaN(price) || price < 0) { document.getElementById('addPrice').style.borderColor='#ef4444'; setTimeout(()=>document.getElementById('addPrice').style.borderColor='#e5e5ea',1800); return; }
+  if (cat === '__new__') { cat = prompt('New category name:'); if (!cat) return; }
+  const p = { cat, name, unit, price };
+  userProducts.push(p);
+  const idx = PRICE_DATA.length;
+  PRICE_DATA.push({ ...p, idx });
+  saveUserProducts();
+  pushToGitHub(p);
+  // Add to cart
+  cart.push({ idx, name, cat, unit, price, qty: 1 });
+  saveState(); updateCartBadge();
+  document.getElementById('addName').value = ''; document.getElementById('addPrice').value = '';
+  populateCatDropdown(); renderPriceList();
+  const btn = document.querySelector('.abtn');
+  if (btn) { btn.textContent='✓'; btn.style.background='#059669'; setTimeout(()=>{btn.textContent='+ Add';btn.style.background='#d97706'},800); }
+}
+
+// ── Edit item ──
+function openEdit(idx) {
+  editIdx = idx;
+  const item = getItem(idx);
+  if (!item) return;
+  document.getElementById('emTitle').textContent = 'Edit: ' + item.name;
+  document.getElementById('emName').value = item.name;
+  document.getElementById('emPrice').value = item.price;
+  document.getElementById('emUnit').value = item.unit;
+  document.getElementById('emCat').value = item.cat;
+  document.getElementById('editModal').style.display = '';
+  setTimeout(() => document.getElementById('emPrice').focus(), 50);
+}
+function closeEditModal() { document.getElementById('editModal').style.display = 'none'; editIdx = null; }
+function saveEdit() {
+  if (editIdx === null) return;
+  const name = document.getElementById('emName').value.trim();
+  const price = parseFloat(document.getElementById('emPrice').value);
+  const unit = document.getElementById('emUnit').value;
+  const cat = document.getElementById('emCat').value.trim();
+  if (!name || isNaN(price)) return;
+  priceEdits[editIdx] = { name, price, unit, cat };
+  saveEdits();
+  // Update cart items too
+  cart.forEach(c => { if (c.idx === editIdx) { c.name = name; c.price = price; c.unit = unit; c.cat = cat; } });
+  saveState();
+  closeEditModal(); populateCatDropdown(); renderPriceList();
+}
+
+// ── Delete item ──
+function deleteItem(idx) {
+  if (!confirm('Delete this item?')) return;
+  priceEdits[idx] = { ...(priceEdits[idx]||{}), deleted: true };
+  saveEdits();
+  cart = cart.filter(c => c.idx !== idx);
+  saveState(); updateCartBadge(); renderPriceList();
+}
+
+// ── Rename category ──
+function openRename(cat) {
+  renameCat = cat;
+  document.getElementById('rmName').value = cat;
+  document.getElementById('renameModal').style.display = '';
+  setTimeout(() => { document.getElementById('rmName').focus(); document.getElementById('rmName').select(); }, 50);
+}
+function closeRename() { document.getElementById('renameModal').style.display = 'none'; renameCat = null; }
+function saveRename() {
+  const newName = document.getElementById('rmName').value.trim();
+  if (!newName || !renameCat) return;
+  // Update all items in this category
+  PRICE_DATA.forEach((item, i) => {
+    const it = getItem(i);
+    if (it && it.cat === renameCat) {
+      if (!priceEdits[i]) priceEdits[i] = {};
+      priceEdits[i].cat = newName;
+    }
+  });
+  // Update cart
+  cart.forEach(c => { if (c.cat === renameCat) c.cat = newName; });
+  saveEdits(); saveState();
+  closeRename(); populateCatDropdown(); renderPriceList();
+}
+
+// ── Cart ──
+function addToCart(idx) {
+  const item = getItem(idx);
+  if (!item) return;
+  const addQty = parseInt(document.getElementById('pq-'+idx)?.value) || 1;
+  const existing = cart.find(c => c.idx === idx);
+  if (existing) existing.qty += addQty;
+  else cart.push({ idx, name: item.name, cat: item.cat, unit: item.unit, price: item.price, qty: addQty });
+  saveState(); updateCartBadge();
+  const qe = document.getElementById('pq-'+idx); if (qe) qe.value = '1';
+  const el = document.getElementById('pa-'+idx);
+  if (el) { el.textContent='✓'; el.style.background='#059669'; setTimeout(()=>{el.textContent='+';el.style.background='#d97706'},700); }
+}
+function removeFromCart(idx) { cart = cart.filter(c => c.idx !== idx); saveState(); updateCartBadge(); renderCart(); }
+function clearCart() { if (confirm('Clear cart?')) { cart = []; saveState(); updateCartBadge(); renderCart(); } }
+function updateCartBadge() { const t = cart.reduce((s,c) => s+c.qty, 0); document.getElementById('cartCount').textContent = t; }
+
+// ── Render Price List ──
+function renderPriceList() {
+  const q = (document.getElementById('priceSearch')?.value||'').toLowerCase().trim();
+  const el = document.getElementById('priceListEl');
+  if (!el) return;
+  const cats = {};
+  PRICE_DATA.forEach((item, i) => {
+    const it = getItem(i);
+    if (!it) return;
+    if (q && !it.name.toLowerCase().includes(q) && !it.cat.toLowerCase().includes(q)) return;
+    if (!cats[it.cat]) cats[it.cat] = [];
+    cats[it.cat].push(it);
+  });
+  if (!Object.keys(cats).length) { el.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa;font-size:13px;font-weight:600">No results</div>'; return; }
+  el.innerHTML = '';
+  Object.entries(cats).forEach(([cat, items]) => {
+    const sec = document.createElement('div');
+    const hdr = document.createElement('div'); hdr.className = 'cat-hdr';
+    hdr.innerHTML = cat + ' <span class="ce">✏️ tap to rename</span>';
+    hdr.onclick = () => openRename(cat);
+    sec.appendChild(hdr);
+    items.forEach(item => {
+      const row = document.createElement('div'); row.className = 'item-row';
+      const dl = document.createElement('button'); dl.className = 'db'; dl.textContent = '✕'; dl.onclick = () => deleteItem(item.idx);
+      const info = document.createElement('div'); info.className = 'item-info';
+      const nm = document.createElement('div'); nm.className = 'item-name'; nm.textContent = item.name;
+      const pr = document.createElement('div'); pr.className = 'item-price';
+      pr.textContent = '$' + item.price.toFixed(2) + ' / ' + item.unit + '  ✏️';
+      pr.onclick = () => openEdit(item.idx);
+      info.appendChild(nm); info.appendChild(pr);
+      const qi = document.createElement('input'); qi.id = 'pq-'+item.idx; qi.className = 'qi';
+      qi.type='number'; qi.inputMode='numeric'; qi.min='1'; qi.value='1';
+      qi.onfocus = function(){ this.style.borderColor='#d97706'; this.select(); };
+      qi.onblur = function(){ this.style.borderColor='#e5e5ea'; };
+      qi.onkeydown = function(e){ if(e.key==='Enter'){ addToCart(item.idx); this.blur(); } };
+      const ab = document.createElement('button'); ab.id = 'pa-'+item.idx; ab.className = 'ab'; ab.textContent = '+'; ab.onclick = () => addToCart(item.idx);
+      row.appendChild(dl); row.appendChild(info); row.appendChild(qi); row.appendChild(ab);
+      sec.appendChild(row);
+    });
+    el.appendChild(sec);
+  });
+}
+
+// ── Render Cart ──
+function renderCart() {
+  const el = document.getElementById('cartItems'), totEl = document.getElementById('cartTotal');
+  if (!el) return;
+  if (!cart.length) { el.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:13px;font-weight:600">Cart is empty</div>'; totEl.innerHTML=''; return; }
+  const cats = {}; cart.forEach(c => { if (!cats[c.cat]) cats[c.cat]=[]; cats[c.cat].push(c); });
+  el.innerHTML = ''; let grandTotal = 0;
+  Object.entries(cats).forEach(([cat, items]) => {
+    const sec = document.createElement('div'); sec.style.cssText='margin:14px 14px 0';
+    const hdr = document.createElement('div'); hdr.style.cssText='font-size:10px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'; hdr.textContent=cat; sec.appendChild(hdr);
+    const card = document.createElement('div'); card.style.cssText='background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)';
+    items.forEach(item => {
+      const lt = item.price * item.qty; grandTotal += lt;
+      const row = document.createElement('div'); row.style.cssText='display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f5f5f5;gap:8px';
+      const dl = document.createElement('button'); dl.className='db'; dl.textContent='✕'; dl.onclick=()=>removeFromCart(item.idx);
+      const info = document.createElement('div'); info.style.cssText='flex:1;min-width:0';
+      info.innerHTML=`<div style="font-size:12px;font-weight:700;color:#1c1c1e">${item.name}</div><div style="font-size:10px;color:#888">$${item.price.toFixed(2)} / ${item.unit}</div>`;
+      const qw = document.createElement('div'); qw.className='qw';
+      const qd = document.createElement('button'); qd.className='qb qd'; qd.textContent='−'; qd.onclick=()=>{item.qty=Math.max(1,item.qty-1);saveState();renderCart();updateCartBadge()};
+      const qi = document.createElement('input'); qi.className='cqi'; qi.type='number'; qi.inputMode='numeric'; qi.min='1'; qi.value=item.qty;
+      qi.onfocus=function(){this.style.borderColor='#d97706';this.select()};
+      qi.onblur=function(){this.style.borderColor='#e5e5ea';item.qty=Math.max(1,parseInt(this.value)||1);saveState();renderCart();updateCartBadge()};
+      qi.onkeydown=function(e){if(e.key==='Enter')this.blur()};
+      const qp = document.createElement('button'); qp.className='qb qp'; qp.textContent='+'; qp.onclick=()=>{item.qty++;saveState();renderCart();updateCartBadge()};
+      const lp = document.createElement('div'); lp.style.cssText='font-size:12px;font-weight:800;color:#1c1c1e;min-width:52px;text-align:right;flex-shrink:0'; lp.textContent='$'+lt.toFixed(2);
+      qw.appendChild(qd);qw.appendChild(qi);qw.appendChild(qp);
+      row.appendChild(dl);row.appendChild(info);row.appendChild(qw);row.appendChild(lp);card.appendChild(row);
+    });
+    sec.appendChild(card); el.appendChild(sec);
+  });
+  const tax=grandTotal*.06,withTax=grandTotal+tax,totalBill=withTax*1.5;
+  const hr=laborTechsVal==='2'?225:175,lh=parseFloat(laborHoursVal)||0,lc=lh*hr,gb=totalBill+lc;
+  const r=(l,v,b,c)=>`<div style="display:flex;justify-content:space-between;padding:${b?'10px 0 6px':'5px 0'};${b?'border-top:2px solid #f0f0f0;margin-top:4px':'border-bottom:1px solid #f8f8f8'}"><span style="font-size:${b?14:11}px;font-weight:${b?800:600};color:${b?'#1c1c1e':'#666'}">${l}</span><span style="font-size:${b?16:12}px;font-weight:800;color:${c||'#1c1c1e'}">${v}</span></div>`;
+  totEl.innerHTML=`<div style="font-size:10px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Quote Summary</div>${r('Materials','$'+grandTotal.toFixed(2))}${r('Tax (6%)','$'+tax.toFixed(2))}${r('Materials + Tax','$'+withTax.toFixed(2))}${r('Bill (×1.5)','$'+totalBill.toFixed(2),0,'#b45309')}<div style="margin:14px 0 8px;font-size:10px;font-weight:800;color:#1e3a8a;text-transform:uppercase;letter-spacing:.5px">Labor</div><div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Hours</div><input type="number" min="0" step="0.5" value="${laborHoursVal}" placeholder="0" oninput="laborHoursVal=this.value;saveState();renderCart()" style="width:100%;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;text-align:center;color:#1c1c1e;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e5ea'"></div><div style="flex:1"><div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Techs</div><div style="display:flex;border:2px solid #e5e5ea;border-radius:10px;overflow:hidden"><button onclick="laborTechsVal='1';saveState();renderCart()" style="flex:1;padding:10px;border:none;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;background:${laborTechsVal==='1'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='1'?'#fff':'#666'}">1<br><span style="font-size:9px;font-weight:600">$175/hr</span></button><button onclick="laborTechsVal='2';saveState();renderCart()" style="flex:1;padding:10px;border:none;border-left:1px solid #e5e5ea;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;background:${laborTechsVal==='2'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='2'?'#fff':'#666'}">2<br><span style="font-size:9px;font-weight:600">$225/hr</span></button></div></div></div>${lh>0?r('Labor ('+lh+'h × $'+hr+'/hr)','$'+lc.toFixed(2),0,'#1e3a8a'):'<div style="font-size:11px;color:#aaa;text-align:center;padding:4px 0">Enter hours for labor</div>'}<div style="background:linear-gradient(135deg,#b45309,#92400e);border-radius:12px;padding:14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7)">GRAND TOTAL</div></div><div style="font-size:26px;font-weight:800;color:#fff">$${gb.toFixed(2)}</div></div>`;
+}
+
+// ── GitHub Sync ──
+function saveGH() { ghOwner=document.getElementById('ghOwner').value.trim(); ghRepo=document.getElementById('ghRepo').value.trim(); ghToken=document.getElementById('ghToken').value.trim(); localStorage.setItem('asr_gh_owner',ghOwner); localStorage.setItem('asr_gh_repo',ghRepo); localStorage.setItem('asr_gh_token',ghToken); document.getElementById('ghStatus').textContent='✅ Saved. Syncing…'; document.getElementById('ghStatus').style.color='#059669'; fetchShared(); }
+async function testSync() { const s=document.getElementById('ghStatus'); if(!ghOwner||!ghRepo){s.textContent='❌ Enter owner & repo';s.style.color='#dc2626';return} s.textContent='⏳ Testing…';s.style.color='#888'; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:ghToken?{'Authorization':'Bearer '+ghToken}:{}}); if(r.ok){const d=await r.json();const c=JSON.parse(atob(d.content));s.textContent='✅ Connected! '+c.length+' products';s.style.color='#059669'}else{s.textContent='❌ Error '+r.status;s.style.color='#dc2626'}}catch(e){s.textContent='❌ '+e.message;s.style.color='#dc2626'}}
+async function fetchShared() { if(!ghOwner||!ghRepo)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:ghToken?{'Authorization':'Bearer '+ghToken}:{},cache:'no-store'}); if(!r.ok)return; const d=await r.json(); const shared=JSON.parse(atob(d.content)); let added=0; shared.forEach(sp=>{const exists=userProducts.some(up=>up.name===sp.name&&up.cat===sp.cat);if(!exists){userProducts.push(sp);PRICE_DATA.push({...sp,idx:PRICE_DATA.length});added++}}); if(added>0){saveUserProducts();populateCatDropdown();renderPriceList()} const st=document.getElementById('syncStatus');if(st)st.textContent='☁️ Synced · '+shared.length+' shared'}catch(e){}}
+async function pushToGitHub(product) { if(!ghOwner||!ghRepo||!ghToken)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:{'Authorization':'Bearer '+ghToken},cache:'no-store'}); let existing=[],sha=''; if(r.ok){const d=await r.json();sha=d.sha;existing=JSON.parse(atob(d.content))} existing.push(product); await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{method:'PUT',headers:{'Authorization':'Bearer '+ghToken,'Content-Type':'application/json'},body:JSON.stringify({message:'Add: '+product.name,content:btoa(JSON.stringify(existing,null,2)),...(sha?{sha}:{})})})}catch(e){}}
+function resetAll() { if(!confirm('Clear all custom products?'))return; userProducts=[];priceEdits={};saveUserProducts();saveEdits();location.reload() }
+
+// ── Init ──
+populateCatDropdown();
+renderPriceList();
+updateCartBadge();
+fetchShared();
+</script>
+</body>
+</html>
