@@ -118,6 +118,7 @@ body{display:flex;flex-direction:column}
   <div class="cart-hdr">
     <button class="bb" onclick="showList()">←</button>
     <h2>Cart / Quote</h2>
+    <button class="cb" style="background:rgba(255,255,255,.35)" onclick="showQuote()">📄 Quote</button>
     <button class="cb" onclick="clearCart()">Clear</button>
   </div>
   <div class="cart-scroll">
@@ -170,6 +171,16 @@ body{display:flex;flex-direction:column}
       <button style="background:#222;color:#fff" onclick="saveRename()">Rename</button>
     </div>
   </div>
+</div>
+
+<!-- ═══ CUSTOMER QUOTE ═══ -->
+<div id="quoteView" class="view">
+  <div style="background:#fff;padding:12px 16px;border-bottom:1px solid #e5e5ea;display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <button onclick="closeQuote()" style="background:#f2f2f7;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;font-family:inherit;color:#1c1c1e">←</button>
+    <span style="flex:1;font-size:16px;font-weight:800;color:#1c1c1e">Customer Quote</span>
+    <button onclick="shareQuote()" style="background:#0055d4;border:none;border-radius:8px;padding:8px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copy</button>
+  </div>
+  <div id="quoteContent" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff"></div>
 </div>
 
 <script>
@@ -861,7 +872,7 @@ function renderCart() {
   const tax=grandTotal*.06,withTax=grandTotal+tax,totalBill=withTax*1.5;
   const hr=laborTechsVal==='2'?225:175,lh=parseFloat(laborHoursVal)||0,lc=lh*hr,gb=totalBill+lc;
   const r=(l,v,b,c)=>`<div style="display:flex;justify-content:space-between;padding:${b?'10px 0 6px':'5px 0'};${b?'border-top:2px solid #f0f0f0;margin-top:4px':'border-bottom:1px solid #f8f8f8'}"><span style="font-size:${b?14:11}px;font-weight:${b?800:600};color:${b?'#1c1c1e':'#666'}">${l}</span><span style="font-size:${b?16:12}px;font-weight:800;color:${c||'#1c1c1e'}">${v}</span></div>`;
-  totEl.innerHTML=`<div style="font-size:10px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Quote Summary</div>${r('Materials','$'+grandTotal.toFixed(2))}${r('Tax (6%)','$'+tax.toFixed(2))}${r('Materials + Tax','$'+withTax.toFixed(2))}${r('Bill (×1.5)','$'+totalBill.toFixed(2),0,'#b45309')}<div style="margin:14px 0 8px;font-size:10px;font-weight:800;color:#1e3a8a;text-transform:uppercase;letter-spacing:.5px">Labor</div><div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Hours</div><input type="number" min="0" step="0.5" value="${laborHoursVal}" placeholder="0" oninput="laborHoursVal=this.value;saveState();renderCart()" style="width:100%;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;text-align:center;color:#1c1c1e;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e5ea'"></div><div style="flex:1"><div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Techs</div><div style="display:flex;border:2px solid #e5e5ea;border-radius:10px;overflow:hidden"><button onclick="laborTechsVal='1';saveState();renderCart()" style="flex:1;padding:10px;border:none;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;background:${laborTechsVal==='1'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='1'?'#fff':'#666'}">1<br><span style="font-size:9px;font-weight:600">$175/hr</span></button><button onclick="laborTechsVal='2';saveState();renderCart()" style="flex:1;padding:10px;border:none;border-left:1px solid #e5e5ea;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;background:${laborTechsVal==='2'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='2'?'#fff':'#666'}">2<br><span style="font-size:9px;font-weight:600">$225/hr</span></button></div></div></div>${lh>0?r('Labor ('+lh+'h × $'+hr+'/hr)','$'+lc.toFixed(2),0,'#1e3a8a'):'<div style="font-size:11px;color:#aaa;text-align:center;padding:4px 0">Enter hours for labor</div>'}<div style="background:linear-gradient(135deg,#b45309,#92400e);border-radius:12px;padding:14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7)">GRAND TOTAL</div></div><div style="font-size:26px;font-weight:800;color:#fff">$${gb.toFixed(2)}</div></div>`;
+  totEl.innerHTML=`<div style="font-size:10px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Quote Summary</div>${r('Materials','$'+grandTotal.toFixed(2))}${r('Tax (6%)','$'+tax.toFixed(2))}${r('Materials + Tax','$'+withTax.toFixed(2))}${r('Bill (×1.5)','$'+totalBill.toFixed(2),0,'#b45309')}<div style="margin:14px 0 8px;font-size:10px;font-weight:800;color:#1e3a8a;text-transform:uppercase;letter-spacing:.5px">Labor</div><div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Hours</div><input type="number" min="0" step="any" value="${laborHoursVal}" placeholder="0" oninput="laborHoursVal=this.value;saveState();renderCart()" style="width:100%;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;text-align:center;color:#1c1c1e;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e5ea'"></div><div style="flex:1"><div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Techs</div><div style="display:flex;border:2px solid #e5e5ea;border-radius:10px;overflow:hidden"><button onclick="laborTechsVal='1';saveState();renderCart()" style="flex:1;padding:10px;border:none;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;background:${laborTechsVal==='1'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='1'?'#fff':'#666'}">1<br><span style="font-size:9px;font-weight:600">$175/hr</span></button><button onclick="laborTechsVal='2';saveState();renderCart()" style="flex:1;padding:10px;border:none;border-left:1px solid #e5e5ea;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;background:${laborTechsVal==='2'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='2'?'#fff':'#666'}">2<br><span style="font-size:9px;font-weight:600">$225/hr</span></button></div></div></div>${lh>0?r('Labor ('+lh+'h × $'+hr+'/hr)','$'+lc.toFixed(2),0,'#1e3a8a'):'<div style="font-size:11px;color:#aaa;text-align:center;padding:4px 0">Enter hours for labor</div>'}<div style="background:linear-gradient(135deg,#b45309,#92400e);border-radius:12px;padding:14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7)">GRAND TOTAL</div></div><div style="font-size:26px;font-weight:800;color:#fff">$${gb.toFixed(2)}</div></div>`;
 }
 
 // ── GitHub Sync ──
@@ -870,6 +881,87 @@ async function testSync() { const s=document.getElementById('ghStatus'); if(!ghO
 async function fetchShared() { if(!ghOwner||!ghRepo)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:ghToken?{'Authorization':'Bearer '+ghToken}:{},cache:'no-store'}); if(!r.ok)return; const d=await r.json(); const shared=JSON.parse(atob(d.content)); let added=0; shared.forEach(sp=>{const exists=userProducts.some(up=>up.name===sp.name&&up.cat===sp.cat);if(!exists){userProducts.push(sp);PRICE_DATA.push({...sp,idx:PRICE_DATA.length});added++}}); if(added>0){saveUserProducts();populateCatDropdown();renderPriceList()} const st=document.getElementById('syncStatus');if(st)st.textContent='☁️ Synced · '+shared.length+' shared'}catch(e){}}
 async function pushToGitHub(product) { if(!ghOwner||!ghRepo||!ghToken)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:{'Authorization':'Bearer '+ghToken},cache:'no-store'}); let existing=[],sha=''; if(r.ok){const d=await r.json();sha=d.sha;existing=JSON.parse(atob(d.content))} existing.push(product); await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{method:'PUT',headers:{'Authorization':'Bearer '+ghToken,'Content-Type':'application/json'},body:JSON.stringify({message:'Add: '+product.name,content:btoa(JSON.stringify(existing,null,2)),...(sha?{sha}:{})})})}catch(e){}}
 function resetAll() { if(!confirm('Clear all custom products?'))return; userProducts=[];priceEdits={};saveUserProducts();saveEdits();location.reload() }
+
+// ── Customer Quote ──
+function showQuote() {
+  document.getElementById('cartView').classList.remove('on');
+  document.getElementById('quoteView').classList.add('on');
+  renderQuote();
+}
+function closeQuote() {
+  document.getElementById('quoteView').classList.remove('on');
+  document.getElementById('cartView').classList.add('on');
+}
+
+function renderQuote() {
+  const el = document.getElementById('quoteContent');
+  if (!el) return;
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+  let materialsTotal = 0;
+  cart.forEach(c => { materialsTotal += c.price * c.qty; });
+  const tax = materialsTotal * 0.06;
+  const withTax = materialsTotal + tax;
+  const totalBill = withTax * 1.5;
+  const hr = laborTechsVal === '2' ? 225 : 175;
+  const lh = parseFloat(laborHoursVal) || 0;
+  const laborCost = lh * hr;
+  const grandTotal = totalBill + laborCost;
+
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:40px 24px">
+      <div style="font-size:32px;font-weight:900;color:#1c1c1e;letter-spacing:-0.5px">ASR Plumbing</div>
+      <div style="font-size:13px;color:#888;margin-top:6px;font-weight:600">Service Quote</div>
+      <div style="font-size:12px;color:#aaa;margin-top:4px">${dateStr}</div>
+
+      <div style="width:100%;max-width:300px;margin:40px 0;padding:32px 24px;background:linear-gradient(135deg,#b45309,#92400e);border-radius:20px;text-align:center;box-shadow:0 8px 30px rgba(180,83,9,.3)">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Total</div>
+        <div style="font-size:42px;font-weight:900;color:#fff;letter-spacing:-1px">$${grandTotal.toFixed(2)}</div>
+      </div>
+
+      <div style="text-align:center;margin-top:10px">
+        <div style="font-size:11px;color:#bbb;line-height:1.8">
+          Quote valid for 30 days<br>
+          Prices subject to change<br><br>
+          Thank you for choosing ASR Plumbing
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function shareQuote() {
+  let materialsTotal = 0;
+  cart.forEach(c => { materialsTotal += c.price * c.qty; });
+  const tax = materialsTotal * 0.06;
+  const withTax = materialsTotal + tax;
+  const totalBill = withTax * 1.5;
+  const hr = laborTechsVal === '2' ? 225 : 175;
+  const lh = parseFloat(laborHoursVal) || 0;
+  const laborCost = lh * hr;
+  const grandTotal = totalBill + laborCost;
+  const today = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+  let text = `ASR PLUMBING\nService Quote — ${today}\n\nTotal: $${grandTotal.toFixed(2)}\n\nQuote valid 30 days.\nThank you for choosing ASR Plumbing.`;
+
+  if (navigator.share) {
+    navigator.share({ title: 'ASR Quote', text }).catch(() => {
+      navigator.clipboard?.writeText(text);
+      alert('Quote copied to clipboard!');
+    });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => alert('Quote copied to clipboard!'));
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('Quote copied to clipboard!');
+  }
+}
 
 // ── Init ──
 populateCatDropdown();
