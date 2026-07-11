@@ -87,6 +87,7 @@ body{display:flex;flex-direction:column}
     <div class="hero-row">
       <div><h1>ASR Price List</h1><p id="syncStatus">Tap qty + add to cart</p></div>
       <div class="hero-btns">
+        <button class="hb" onclick="openTM()">📋 T&M</button>
         <button class="hb" onclick="openSettings()">⚙️</button>
         <button class="hb" id="cartBtn" onclick="showCart()">🛒 <span id="cartCount">0</span></button>
       </div>
@@ -181,6 +182,42 @@ body{display:flex;flex-direction:column}
     <button onclick="shareQuote()" style="background:#0055d4;border:none;border-radius:8px;padding:8px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copy</button>
   </div>
   <div id="quoteContent" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff"></div>
+</div>
+
+<!-- ═══ T&M EDITOR ═══ -->
+<div id="tmView" class="view">
+  <div style="background:linear-gradient(135deg,#1e3a5f,#1e40af);padding:max(env(safe-area-inset-top),14px) 16px 14px;color:#fff;display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <button onclick="closeTM()" style="background:rgba(255,255,255,.2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;color:#fff;font-family:inherit">←</button>
+    <h2 style="font-size:18px;font-weight:800;margin:0;flex:1">Time & Materials</h2>
+    <button onclick="showTMPreview()" style="background:rgba(255,255,255,.3);border:none;border-radius:8px;padding:8px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">👁 Preview</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f2f2f7;padding:16px;padding-bottom:100px">
+    <!-- Customer info -->
+    <div style="background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:12px">
+      <div style="font-size:10px;font-weight:800;color:#1e3a5f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Customer Info</div>
+      <input id="tmCustomer" type="text" placeholder="Customer name" style="width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;outline:none;color:#1c1c1e;margin-bottom:8px" onfocus="this.style.borderColor='#1e40af'" onblur="this.style.borderColor='#e5e5ea';saveTM()">
+      <div style="display:flex;gap:8px">
+        <input id="tmDateStart" type="date" style="flex:1;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e" onchange="saveTM()">
+        <input id="tmDateEnd" type="date" style="flex:1;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e" onchange="saveTM()">
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div id="tmProjects"></div>
+
+    <!-- Add project button -->
+    <button onclick="addTMProject()" style="width:100%;padding:14px;border:2px dashed #cbd5e1;border-radius:14px;background:transparent;color:#1e40af;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:12px">+ Add Project</button>
+  </div>
+</div>
+
+<!-- ═══ T&M CUSTOMER PREVIEW ═══ -->
+<div id="tmPreview" class="view">
+  <div style="background:#fff;padding:12px 16px;border-bottom:1px solid #e5e5ea;display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <button onclick="closeTMPreview()" style="background:#f2f2f7;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;font-family:inherit;color:#1c1c1e">←</button>
+    <span style="flex:1;font-size:16px;font-weight:800;color:#1c1c1e">Customer T&M Sheet</span>
+    <button onclick="shareTM()" style="background:#1e40af;border:none;border-radius:8px;padding:8px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copy</button>
+  </div>
+  <div id="tmPreviewContent" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff"></div>
 </div>
 
 <script>
@@ -960,6 +997,227 @@ function shareQuote() {
     ta.select(); document.execCommand('copy');
     document.body.removeChild(ta);
     alert('Quote copied to clipboard!');
+  }
+}
+
+// ── Time & Materials ──
+let tmData = { customer: '', dateStart: '', dateEnd: '', projects: [] };
+try { const saved = localStorage.getItem('asr_tm'); if (saved) tmData = JSON.parse(saved); } catch(e) {}
+
+function saveTM() {
+  tmData.customer = document.getElementById('tmCustomer')?.value || '';
+  tmData.dateStart = document.getElementById('tmDateStart')?.value || '';
+  tmData.dateEnd = document.getElementById('tmDateEnd')?.value || '';
+  localStorage.setItem('asr_tm', JSON.stringify(tmData));
+}
+
+function openTM() {
+  document.getElementById('priceView').classList.remove('on');
+  document.getElementById('tmView').classList.add('on');
+  document.getElementById('tmCustomer').value = tmData.customer;
+  document.getElementById('tmDateStart').value = tmData.dateStart;
+  document.getElementById('tmDateEnd').value = tmData.dateEnd;
+  renderTMProjects();
+}
+function closeTM() { saveTM(); document.getElementById('tmView').classList.remove('on'); document.getElementById('priceView').classList.add('on'); }
+
+function addTMProject() {
+  tmData.projects.push({ name: '', materials: '', laborHours: '', laborRate: '225' });
+  saveTM(); renderTMProjects();
+}
+
+function removeTMProject(i) {
+  tmData.projects.splice(i, 1);
+  saveTM(); renderTMProjects();
+}
+
+function renderTMProjects() {
+  const el = document.getElementById('tmProjects');
+  if (!el) return;
+  el.innerHTML = '';
+  tmData.projects.forEach((proj, i) => {
+    const mat = parseFloat(proj.materials) || 0;
+    const hrs = parseFloat(proj.laborHours) || 0;
+    const rate = parseFloat(proj.laborRate) || 225;
+    const labor = hrs * rate;
+    const total = mat + labor;
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:12px;border-left:4px solid #1e40af';
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:10px;font-weight:800;color:#1e3a5f;text-transform:uppercase;letter-spacing:.5px">Project ${i+1}</div>
+        <button onclick="removeTMProject(${i})" style="background:#fee2e2;border:none;width:24px;height:24px;border-radius:50%;color:#dc2626;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">✕</button>
+      </div>
+      <input value="${proj.name}" placeholder="Project name (e.g. Basement, Kitchen…)" onblur="tmData.projects[${i}].name=this.value;saveTM()" style="width:100%;padding:11px;border:2px solid #e5e5ea;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;outline:none;color:#1c1c1e;margin-bottom:10px" onfocus="this.style.borderColor='#1e40af'" onblur="this.style.borderColor='#e5e5ea';tmData.projects[${i}].name=this.value;saveTM()">
+
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="flex:1">
+          <div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Materials $</div>
+          <input type="number" step="0.01" min="0" value="${proj.materials}" placeholder="0.00" oninput="tmData.projects[${i}].materials=this.value;saveTM();renderTMProjects()" style="width:100%;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:15px;font-weight:800;font-family:inherit;outline:none;color:#1c1c1e;text-align:center" onfocus="this.style.borderColor='#1e40af';this.select()" onblur="this.style.borderColor='#e5e5ea'">
+        </div>
+        <div style="flex:1">
+          <div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Labor Hours</div>
+          <input type="number" step="any" min="0" value="${proj.laborHours}" placeholder="0" oninput="tmData.projects[${i}].laborHours=this.value;saveTM();renderTMProjects()" style="width:100%;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:15px;font-weight:800;font-family:inherit;outline:none;color:#1c1c1e;text-align:center" onfocus="this.style.borderColor='#1e40af';this.select()" onblur="this.style.borderColor='#e5e5ea'">
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Rate</div>
+        <div style="display:flex;border:2px solid #e5e5ea;border-radius:10px;overflow:hidden">
+          <button onclick="tmData.projects[${i}].laborRate='175';saveTM();renderTMProjects()" style="flex:1;padding:8px;border:none;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;background:${proj.laborRate==='175'?'#1e40af':'#f5f5f5'};color:${proj.laborRate==='175'?'#fff':'#666'}">1 Tech · $175/hr</button>
+          <button onclick="tmData.projects[${i}].laborRate='225';saveTM();renderTMProjects()" style="flex:1;padding:8px;border:none;border-left:1px solid #e5e5ea;font-size:12px;font-weight:800;font-family:inherit;cursor:pointer;background:${proj.laborRate!=='175'?'#1e40af':'#f5f5f5'};color:${proj.laborRate!=='175'?'#fff':'#666'}">2 Tech · $225/hr</button>
+        </div>
+      </div>
+
+      <div style="background:#f0f4ff;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:10px;color:#1e3a5f;font-weight:600">Materials: $${mat.toFixed(2)} · Labor: $${labor.toFixed(2)}</div>
+        </div>
+        <div style="font-size:16px;font-weight:900;color:#1e40af">$${total.toFixed(2)}</div>
+      </div>
+    `;
+    el.appendChild(card);
+  });
+}
+
+// ── T&M Preview ──
+function showTMPreview() {
+  saveTM();
+  document.getElementById('tmView').classList.remove('on');
+  document.getElementById('tmPreview').classList.add('on');
+  renderTMPreview();
+}
+function closeTMPreview() {
+  document.getElementById('tmPreview').classList.remove('on');
+  document.getElementById('tmView').classList.add('on');
+}
+
+function formatTMDates() {
+  const opts = { year: 'numeric', month: 'long', day: 'numeric' };
+  const s = tmData.dateStart ? new Date(tmData.dateStart + 'T12:00:00').toLocaleDateString('en-US', opts) : '';
+  const e = tmData.dateEnd ? new Date(tmData.dateEnd + 'T12:00:00').toLocaleDateString('en-US', opts) : '';
+  if (s && e && s !== e) return s + ' – ' + e;
+  if (s) return s;
+  return new Date().toLocaleDateString('en-US', opts);
+}
+
+function renderTMPreview() {
+  const el = document.getElementById('tmPreviewContent');
+  if (!el) return;
+
+  let totalMat = 0, totalLabor = 0, totalHrs = 0;
+  tmData.projects.forEach(p => {
+    const m = parseFloat(p.materials) || 0;
+    const h = parseFloat(p.laborHours) || 0;
+    const r = parseFloat(p.laborRate) || 225;
+    totalMat += m; totalLabor += h * r; totalHrs += h;
+  });
+  const grandTotal = totalMat + totalLabor;
+
+  let html = `
+    <div style="padding:36px 24px 24px;text-align:center">
+      <div style="font-size:32px;font-weight:900;color:#1c1c1e;letter-spacing:-0.5px">ASR Plumbing</div>
+      <div style="font-size:14px;font-weight:700;color:#1e40af;margin-top:8px">Time & Materials Summary</div>
+      <div style="margin-top:14px;display:inline-block;background:#f0f4ff;border-radius:10px;padding:8px 20px">
+        <div style="font-size:13px;font-weight:700;color:#1c1c1e">${tmData.customer || 'Customer'}</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">${formatTMDates()}</div>
+      </div>
+    </div>
+  `;
+
+  // Project table
+  if (tmData.projects.length) {
+    html += `
+      <div style="margin:4px 20px 0">
+        <div style="display:flex;padding:10px 14px;background:#1e3a5f;border-radius:10px 10px 0 0">
+          <div style="flex:2;font-size:10px;font-weight:800;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.5px">Project</div>
+          <div style="flex:1;font-size:10px;font-weight:800;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.5px;text-align:right">Materials</div>
+          <div style="flex:1;font-size:10px;font-weight:800;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.5px;text-align:right">Labor</div>
+          <div style="flex:1;font-size:10px;font-weight:800;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.5px;text-align:right">Hours</div>
+          <div style="flex:1;font-size:10px;font-weight:800;color:rgba(255,255,255,.9);text-transform:uppercase;letter-spacing:.5px;text-align:right">Total</div>
+        </div>`;
+
+    tmData.projects.forEach((p, i) => {
+      const m = parseFloat(p.materials) || 0;
+      const h = parseFloat(p.laborHours) || 0;
+      const r = parseFloat(p.laborRate) || 225;
+      const l = h * r;
+      const t = m + l;
+      const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
+      html += `
+        <div style="display:flex;padding:12px 14px;background:${bg};border-bottom:1px solid #f0f0f0;align-items:center">
+          <div style="flex:2;font-size:13px;font-weight:700;color:#1c1c1e">${p.name || 'Project ' + (i+1)}</div>
+          <div style="flex:1;font-size:12px;font-weight:600;color:#555;text-align:right">$${m.toFixed(2)}</div>
+          <div style="flex:1;font-size:12px;font-weight:600;color:#555;text-align:right">$${l.toFixed(2)}</div>
+          <div style="flex:1;font-size:12px;font-weight:600;color:#555;text-align:right">${h}</div>
+          <div style="flex:1;font-size:13px;font-weight:800;color:#1c1c1e;text-align:right">$${t.toFixed(2)}</div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Summary
+  html += `
+    <div style="margin:24px 20px 0;background:#f8fafc;border-radius:14px;padding:20px">
+      <div style="font-size:10px;font-weight:800;color:#1e3a5f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Cost Breakdown</div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e5ea"><span style="font-size:13px;font-weight:600;color:#555">Total Materials</span><span style="font-size:14px;font-weight:800;color:#1c1c1e">$${totalMat.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e5ea"><span style="font-size:13px;font-weight:600;color:#555">Total Labor</span><span style="font-size:14px;font-weight:800;color:#1c1c1e">$${totalLabor.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e5ea"><span style="font-size:13px;font-weight:600;color:#555">Total Hours</span><span style="font-size:14px;font-weight:800;color:#1c1c1e">${totalHrs}</span></div>
+    </div>
+
+    <div style="margin:16px 20px;background:linear-gradient(135deg,#1e3a5f,#1e40af);border-radius:16px;padding:24px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 8px 24px rgba(30,64,175,.25)">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px">Grand Total Due</div>
+      </div>
+      <div style="font-size:32px;font-weight:900;color:#fff">$${grandTotal.toFixed(2)}</div>
+    </div>
+
+    <div style="padding:20px 24px 40px;text-align:center">
+      <div style="font-size:10px;color:#bbb;line-height:1.8">Thank you for choosing ASR Plumbing</div>
+    </div>
+  `;
+
+  el.innerHTML = html;
+}
+
+function shareTM() {
+  saveTM();
+  let totalMat = 0, totalLabor = 0, totalHrs = 0;
+  tmData.projects.forEach(p => {
+    const m = parseFloat(p.materials) || 0;
+    const h = parseFloat(p.laborHours) || 0;
+    const r = parseFloat(p.laborRate) || 225;
+    totalMat += m; totalLabor += h * r; totalHrs += h;
+  });
+  const grandTotal = totalMat + totalLabor;
+
+  let text = `ASR PLUMBING\nTime & Materials Summary\n`;
+  text += `Customer: ${tmData.customer || 'N/A'}\n`;
+  text += `Date: ${formatTMDates()}\n`;
+  text += `${'─'.repeat(32)}\n\n`;
+
+  tmData.projects.forEach(p => {
+    const m = parseFloat(p.materials) || 0;
+    const h = parseFloat(p.laborHours) || 0;
+    const r = parseFloat(p.laborRate) || 225;
+    const l = h * r;
+    text += `${p.name || 'Project'}\n  Materials: $${m.toFixed(2)} · Labor: $${l.toFixed(2)} (${h} hrs)\n  Subtotal: $${(m+l).toFixed(2)}\n\n`;
+  });
+
+  text += `${'─'.repeat(32)}\n`;
+  text += `Total Materials: $${totalMat.toFixed(2)}\n`;
+  text += `Total Labor: $${totalLabor.toFixed(2)} (${totalHrs} hrs)\n`;
+  text += `${'─'.repeat(32)}\n`;
+  text += `GRAND TOTAL: $${grandTotal.toFixed(2)}\n\nThank you for choosing ASR Plumbing.`;
+
+  if (navigator.share) {
+    navigator.share({ title: 'ASR T&M', text }).catch(() => { navigator.clipboard?.writeText(text); alert('Copied!'); });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+  } else {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert('Copied!');
   }
 }
 
