@@ -10,5 +10,11 @@
     "name": "Mop Basin Faucet",
     "unit": "ea",
     "price": 149
+  },
+  {
+    "cat": "ASR Water Heater Flat Rate",
+    "name": "Small Drain Machine",
+    "unit": "ea",
+    "price": 150
   }
 ]
