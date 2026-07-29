@@ -28,5 +28,11 @@
     "name": "Camera",
     "unit": "ea",
     "price": 50
+  },
+  {
+    "cat": "ASR Water Heater Flat Rate",
+    "name": "Jetter",
+    "unit": "ea",
+    "price": 500
   }
 ]
