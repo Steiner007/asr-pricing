@@ -16,5 +16,11 @@
     "name": "Small Drain Machine",
     "unit": "ea",
     "price": 150
+  },
+  {
+    "cat": "ASR Water Heater Flat Rate",
+    "name": "Large Drain Machine",
+    "unit": "ea",
+    "price": 250
   }
 ]
