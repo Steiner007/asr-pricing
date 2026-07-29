@@ -22,5 +22,11 @@
     "name": "Large Drain Machine",
     "unit": "ea",
     "price": 250
+  },
+  {
+    "cat": "ASR Water Heater Flat Rate",
+    "name": "Camera",
+    "unit": "ea",
+    "price": 50
   }
 ]
