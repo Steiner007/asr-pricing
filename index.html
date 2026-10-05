@@ -8,75 +8,96 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100dvh;overflow:hidden;font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;background:#f2f2f7}
 body{display:flex;flex-direction:column}
+input[type=number]{-webkit-appearance:none;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .view{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0}.view.on{display:flex}
-.hero{background:linear-gradient(135deg,#b45309,#d97706);padding:max(env(safe-area-inset-top),14px) 16px 10px;color:#fff;flex-shrink:0}
-.hero h1{font-size:18px;font-weight:800;margin:0 0 2px}.hero p{font-size:11px;opacity:.8;margin:0}
-.hero-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.hero-btns{display:flex;gap:6px}
-.hb{background:rgba(255,255,255,.2);border:none;border-radius:10px;padding:8px 10px;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#b45309,#d97706);padding:max(env(safe-area-inset-top),16px) 16px 12px;color:#fff;flex-shrink:0}
+.hero h1{font-size:20px;font-weight:900;margin:0 0 2px}.hero p{font-size:11px;opacity:.8;margin:0}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hero-btns{display:flex;gap:8px}
+.hb{background:rgba(255,255,255,.2);border:none;border-radius:12px;padding:10px 14px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;min-height:44px;display:flex;align-items:center;gap:4px}
+.hb:active{background:rgba(255,255,255,.35)}
+
+/* Search */
 .search-wrap{position:relative;margin-top:10px}
-.search{width:100%;padding:10px 12px;border-radius:10px;border:none;font-size:13px;font-family:inherit;outline:none;background:rgba(255,255,255,.95);color:#1c1c1e}
-.suggest{position:absolute;top:100%;left:0;right:0;background:#fff;border-radius:0 0 10px 10px;box-shadow:0 8px 24px rgba(0,0,0,.15);max-height:200px;overflow-y:auto;z-index:100;display:none}
+.search{width:100%;padding:12px 14px;border-radius:12px;border:none;font-size:16px;font-family:inherit;outline:none;background:rgba(255,255,255,.95);color:#1c1c1e}
+.suggest{position:absolute;top:100%;left:0;right:0;background:#fff;border-radius:0 0 12px 12px;box-shadow:0 8px 24px rgba(0,0,0,.15);max-height:240px;overflow-y:auto;z-index:100;display:none}
 .suggest.on{display:block}
-.sug-item{padding:10px 14px;font-size:12px;font-weight:600;color:#1c1c1e;border-bottom:1px solid #f5f5f5;cursor:pointer}
+.sug-item{padding:14px 16px;font-size:14px;font-weight:600;color:#1c1c1e;border-bottom:1px solid #f5f5f5;cursor:pointer;min-height:48px;display:flex;align-items:center;gap:8px}
 .sug-item:active{background:#fef3c7}
-.sug-item .sc{font-size:10px;color:#888;font-weight:500}
+.sug-item .sc{font-size:11px;color:#888;font-weight:500}
+
+/* List */
 .list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f2f2f7}
-.cat-hdr{padding:8px 16px 6px;font-size:10px;font-weight:800;color:#92400e;background:#fef3c7;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
-.cat-hdr .ce{font-size:9px;color:#b45309;font-weight:600;opacity:.7}
-.item-row{display:flex;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid #f5f5f5;gap:6px}
+.cat-hdr{padding:10px 16px 8px;font-size:11px;font-weight:800;color:#92400e;background:#fef3c7;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;cursor:pointer;min-height:40px}
+.cat-hdr .ce{font-size:10px;color:#b45309;font-weight:600;opacity:.7}
+.item-row{display:flex;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid #f0f0f0;gap:8px;min-height:56px}
 .item-info{flex:1;min-width:0}
-.item-name{font-size:12px;font-weight:700;color:#1c1c1e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item-price{font-size:11px;color:#888;margin-top:1px;cursor:pointer;display:inline}
-.item-price:active{color:#d97706}
-.qi{width:44px;height:30px;border-radius:8px;border:2px solid #e5e5ea;text-align:center;font-size:13px;font-weight:700;font-family:inherit;color:#1c1c1e;outline:none;-webkit-appearance:none;-moz-appearance:textfield;flex-shrink:0}
-.qi:focus{border-color:#d97706}
-.ab{width:30px;height:30px;border-radius:50%;border:none;background:#d97706;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.db{width:26px;height:26px;border-radius:50%;border:none;background:#fee2e2;color:#dc2626;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-/* Add to cat */
+.item-name{font-size:14px;font-weight:700;color:#1c1c1e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-price{font-size:12px;color:#888;margin-top:2px;cursor:pointer;display:inline-block;padding:2px 6px;border-radius:6px}
+.item-price:active{background:#fef3c7;color:#d97706}
+.qi{width:52px;height:38px;border-radius:10px;border:2px solid #e5e5ea;text-align:center;font-size:16px;font-weight:700;font-family:inherit;color:#1c1c1e;outline:none;flex-shrink:0}
+.qi:focus{border-color:#d97706;background:#fffbeb}
+.ab{width:38px;height:38px;border-radius:50%;border:none;background:#d97706;color:#fff;font-size:20px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ab:active{background:#b45309;transform:scale(.95)}
+.db{width:32px;height:32px;border-radius:50%;border:none;background:#fee2e2;color:#dc2626;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.db:active{background:#dc2626;color:#fff}
+
+/* Add product */
 .add-row{background:#fffbeb;border-bottom:2px solid #fef3c7}
-.add-hdr{padding:8px 16px 6px;font-size:10px;font-weight:800;color:#fff;background:#d97706;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between}
-.add-body{padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px}
-.ai{width:100%;padding:10px 12px;border:2px solid #e5e5ea;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;background:#fff}
-.ai:focus{border-color:#d97706}
-.add-fields{display:flex;gap:6px;align-items:center}
-.pw{position:relative;flex:1}.pw span{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:700;color:#999;pointer-events:none}
-.pi{width:100%;padding:10px 10px 10px 24px;border:2px solid #e5e5ea;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;outline:none;color:#1c1c1e;background:#fff}
-.pi:focus{border-color:#d97706}
-.us{padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;color:#1c1c1e;background:#fff;outline:none;cursor:pointer;flex-shrink:0}
-.cs{padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;color:#1c1c1e;background:#fff;outline:none;cursor:pointer;flex:1;max-width:50%}
-.abtn{height:42px;padding:0 14px;border-radius:10px;border:none;background:#d97706;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
+.add-hdr{padding:10px 16px 8px;font-size:11px;font-weight:800;color:#fff;background:#d97706;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between;min-height:40px}
+.add-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.ai{width:100%;padding:12px 14px;border:2px solid #e5e5ea;border-radius:12px;font-size:16px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;background:#fff}
+.ai:focus{border-color:#d97706;background:#fffbeb}
+.add-fields{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pw{position:relative;flex:1;min-width:80px}.pw span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;font-weight:700;color:#999;pointer-events:none}
+.pi{width:100%;padding:12px 12px 12px 26px;border:2px solid #e5e5ea;border-radius:12px;font-size:16px;font-weight:700;font-family:inherit;outline:none;color:#1c1c1e;background:#fff}
+.pi:focus{border-color:#d97706;background:#fffbeb}
+.us{padding:12px 10px;border:2px solid #e5e5ea;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;color:#1c1c1e;background:#fff;outline:none;cursor:pointer;flex-shrink:0;min-height:44px}
+.cs{padding:12px 8px;border:2px solid #e5e5ea;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;color:#1c1c1e;background:#fff;outline:none;cursor:pointer;flex:1;min-width:100px;min-height:44px}
+.abtn{height:44px;padding:0 16px;border-radius:12px;border:none;background:#d97706;color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
+.abtn:active{background:#b45309;transform:scale(.97)}
+
 /* Cart */
-.cart-hdr{background:linear-gradient(135deg,#b45309,#d97706);padding:14px 16px 10px;color:#fff;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.cart-hdr h2{font-size:18px;font-weight:800;margin:0;flex:1}
-.bb{background:rgba(255,255,255,.2);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;color:#fff;font-family:inherit}
-.cb{background:rgba(255,255,255,.15);border:none;border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
-.cart-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f2f2f7;padding-bottom:80px}
-.summary{margin:0 14px 14px;background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.qw{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.qb{width:26px;height:26px;border-radius:50%;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center}
-.qd{border:1px solid #e5e5ea;background:#f5f5f5;color:#1c1c1e}.qp{border:none;background:#d97706;color:#fff}
-.cqi{width:48px;height:28px;border-radius:6px;border:2px solid #e5e5ea;text-align:center;font-size:13px;font-weight:800;font-family:inherit;color:#1c1c1e;outline:none;-webkit-appearance:none;-moz-appearance:textfield}
-.cqi:focus{border-color:#d97706}
+.cart-hdr{background:linear-gradient(135deg,#b45309,#d97706);padding:max(env(safe-area-inset-top),14px) 16px 12px;color:#fff;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.cart-hdr h2{font-size:20px;font-weight:900;margin:0;flex:1}
+.bb{background:rgba(255,255,255,.2);border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;color:#fff;font-family:inherit;display:flex;align-items:center;justify-content:center}
+.bb:active{background:rgba(255,255,255,.35)}
+.cb{background:rgba(255,255,255,.15);border:none;border-radius:10px;padding:8px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;min-height:36px}
+.cb:active{background:rgba(255,255,255,.3)}
+.cart-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f2f2f7;padding-bottom:100px}
+.summary{margin:0 14px 14px;background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.qw{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.qb{width:32px;height:32px;border-radius:50%;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;border:none}
+.qb:active{transform:scale(.9)}
+.qd{border:1px solid #e5e5ea;background:#f5f5f5;color:#1c1c1e}.qp{background:#d97706;color:#fff}
+.cqi{width:52px;height:32px;border-radius:8px;border:2px solid #e5e5ea;text-align:center;font-size:14px;font-weight:800;font-family:inherit;color:#1c1c1e;outline:none}
+.cqi:focus{border-color:#d97706;background:#fffbeb}
+
 /* Edit modal */
-.emo{position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(3px)}
-.emc{background:#fff;border-radius:14px;padding:20px;width:min(300px,88vw);box-shadow:0 20px 60px rgba(0,0,0,.15)}
-.emc h3{font-size:14px;font-weight:700;color:#222;margin:0 0 12px}
-.emc label{font-size:11px;font-weight:700;color:#666;display:block;margin-bottom:4px}
-.emi{width:100%;padding:12px;font-size:16px;font-weight:700;font-family:inherit;border:2px solid #e5e5ea;border-radius:10px;outline:none;color:#222;margin-bottom:10px}
-.emi:focus{border-color:#d97706}
-.emb{display:flex;gap:8px;margin-top:4px}
-.emb button{flex:1;padding:11px;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer}
+.emo{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.emc{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px max(env(safe-area-inset-bottom),20px);width:100%;max-width:400px;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+.emc h3{font-size:16px;font-weight:800;color:#222;margin:0 0 16px}
+.emc label{font-size:12px;font-weight:700;color:#666;display:block;margin-bottom:4px}
+.emi{width:100%;padding:14px;font-size:16px;font-weight:700;font-family:inherit;border:2px solid #e5e5ea;border-radius:12px;outline:none;color:#222;margin-bottom:12px}
+.emi:focus{border-color:#d97706;background:#fffbeb}
+.emb{display:flex;gap:10px;margin-top:6px}
+.emb button{flex:1;padding:14px;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;min-height:48px}
+.emb button:active{transform:scale(.97)}
+
 /* Settings */
 .set-hdr{background:linear-gradient(135deg,#374151,#1f2937);padding:max(env(safe-area-inset-top),14px) 16px 14px;color:#fff;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.set-hdr h2{font-size:18px;font-weight:800;margin:0;flex:1}
+.set-hdr h2{font-size:20px;font-weight:900;margin:0;flex:1}
 .set-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#f2f2f7;padding:16px}
-.set-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:12px}
-.set-card h3{font-size:14px;font-weight:800;color:#1c1c1e;margin:0 0 4px}
-.set-card p{font-size:11px;color:#888;line-height:1.5;margin:0 0 14px}
-.si{width:100%;padding:10px 12px;border:2px solid #e5e5ea;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;margin-bottom:10px}
-.si:focus{border-color:#6366f1}
-.sbtn{width:100%;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:8px}
+.set-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:14px}
+.set-card h3{font-size:15px;font-weight:800;color:#1c1c1e;margin:0 0 6px}
+.set-card p{font-size:12px;color:#888;line-height:1.5;margin:0 0 14px}
+.si{width:100%;padding:12px 14px;border:2px solid #e5e5ea;border-radius:12px;font-size:14px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;margin-bottom:10px}
+.si:focus{border-color:#6366f1;background:#f0f0ff}
+.sbtn{width:100%;padding:14px;border:none;border-radius:12px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;margin-bottom:8px;min-height:48px}
+.sbtn:active{transform:scale(.98)}
 </style>
 </head>
 <body>
@@ -644,6 +665,22 @@ const PRICE_DATA = [
   { cat: 'Pumps', name: 'Liberty Sewage pump', unit: 'ea', price: 380.00 },
   { cat: 'Pumps', name: 'Zoeller Sewage pump', unit: 'ea', price: 400.00 },
   { cat: 'Pumps', name: 'Liberty SJ10 Sump Pump', unit: 'ea', price: 220.00 },
+  { cat: 'Pumps', name: 'Zoeller M53 Submersible Sump Pump', unit: 'ea', price: 207.00 },
+  // ── Valves (additions) ──
+  { cat: 'Valves', name: '1-1/2" PVC Check/Ball Valve Combo', unit: 'ea', price: 55.00 },
+  // ── Garbage Disposals ──
+  { cat: 'Garbage Disposals', name: 'Moen 1/2 HP Garbage Disposal', unit: 'ea', price: 88.00 },
+  { cat: 'Garbage Disposals', name: 'Badger 5XL 1/2 HP Corded', unit: 'ea', price: 136.00 },
+  { cat: 'Garbage Disposals', name: 'Badger 7XL 3/4 HP Corded', unit: 'ea', price: 145.00 },
+  // ── Service Equipment ──
+  { cat: 'Service Equipment', name: 'Small Drain Machine', unit: 'ea', price: 150.00 },
+  { cat: 'Service Equipment', name: 'Large Drain Machine', unit: 'ea', price: 250.00 },
+  { cat: 'Service Equipment', name: 'Camera', unit: 'ea', price: 50.00 },
+  { cat: 'Service Equipment', name: 'Jetter', unit: 'ea', price: 500.00 },
+  // ── Fixtures (additions) ──
+  { cat: 'Fixtures', name: 'Mop Basin Faucet', unit: 'ea', price: 149.00 },
+  // ── Finish Connections (additions) ──
+  { cat: 'Finish Connections', name: 'Ice Maker Box Pro Pex', unit: 'ea', price: 98.50 },
 ];
 
 PRICE_DATA.forEach((item, i) => { item.idx = i; });
@@ -909,7 +946,53 @@ function renderCart() {
   const tax=grandTotal*.06,withTax=grandTotal+tax,totalBill=withTax*1.5;
   const hr=laborTechsVal==='2'?225:175,lh=parseFloat(laborHoursVal)||0,lc=lh*hr,gb=totalBill+lc;
   const r=(l,v,b,c)=>`<div style="display:flex;justify-content:space-between;padding:${b?'10px 0 6px':'5px 0'};${b?'border-top:2px solid #f0f0f0;margin-top:4px':'border-bottom:1px solid #f8f8f8'}"><span style="font-size:${b?14:11}px;font-weight:${b?800:600};color:${b?'#1c1c1e':'#666'}">${l}</span><span style="font-size:${b?16:12}px;font-weight:800;color:${c||'#1c1c1e'}">${v}</span></div>`;
-  totEl.innerHTML=`<div style="font-size:10px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Quote Summary</div>${r('Materials','$'+grandTotal.toFixed(2))}${r('Tax (6%)','$'+tax.toFixed(2))}${r('Materials + Tax','$'+withTax.toFixed(2))}${r('Bill (×1.5)','$'+totalBill.toFixed(2),0,'#b45309')}<div style="margin:14px 0 8px;font-size:10px;font-weight:800;color:#1e3a8a;text-transform:uppercase;letter-spacing:.5px">Labor</div><div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1"><div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Hours</div><input type="number" min="0" step="any" value="${laborHoursVal}" placeholder="0" oninput="laborHoursVal=this.value;saveState();renderCart()" style="width:100%;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:16px;font-weight:800;font-family:inherit;text-align:center;color:#1c1c1e;outline:none" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e5ea'"></div><div style="flex:1"><div style="font-size:10px;font-weight:700;color:#666;margin-bottom:4px">Techs</div><div style="display:flex;border:2px solid #e5e5ea;border-radius:10px;overflow:hidden"><button onclick="laborTechsVal='1';saveState();renderCart()" style="flex:1;padding:10px;border:none;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;background:${laborTechsVal==='1'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='1'?'#fff':'#666'}">1<br><span style="font-size:9px;font-weight:600">$175/hr</span></button><button onclick="laborTechsVal='2';saveState();renderCart()" style="flex:1;padding:10px;border:none;border-left:1px solid #e5e5ea;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;background:${laborTechsVal==='2'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='2'?'#fff':'#666'}">2<br><span style="font-size:9px;font-weight:600">$225/hr</span></button></div></div></div>${lh>0?r('Labor ('+lh+'h × $'+hr+'/hr)','$'+lc.toFixed(2),0,'#1e3a8a'):'<div style="font-size:11px;color:#aaa;text-align:center;padding:4px 0">Enter hours for labor</div>'}<div style="background:linear-gradient(135deg,#b45309,#92400e);border-radius:12px;padding:14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.7)">GRAND TOTAL</div></div><div style="font-size:26px;font-weight:800;color:#fff">$${gb.toFixed(2)}</div></div>`;
+  totEl.innerHTML=`
+    <div style="font-size:11px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Quote Summary</div>
+    ${r('Materials','$'+grandTotal.toFixed(2))}
+    ${r('Tax (6%)','$'+tax.toFixed(2))}
+    ${r('Materials + Tax','$'+withTax.toFixed(2))}
+    ${r('Bill (×1.5 markup)','$'+totalBill.toFixed(2),0,'#b45309')}
+
+    <div style="margin:16px 0 10px;font-size:11px;font-weight:800;color:#1e3a8a;text-transform:uppercase;letter-spacing:.5px">Labor</div>
+
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px">Hours</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="adjLabor(-0.25)" style="width:36px;height:40px;border-radius:10px;border:1px solid #e5e5ea;background:#f5f5f5;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;color:#1c1c1e">−</button>
+          <input id="laborInput" type="number" min="0" step="0.25" value="${laborHoursVal}" placeholder="0"
+            oninput="laborHoursVal=this.value;saveState();renderCart()"
+            style="flex:1;padding:10px;border:2px solid #e5e5ea;border-radius:10px;font-size:18px;font-weight:800;font-family:inherit;text-align:center;color:#1c1c1e;outline:none;min-width:0"
+            onfocus="this.style.borderColor='#2563eb';this.select()" onblur="this.style.borderColor='#e5e5ea'">
+          <button onclick="adjLabor(0.25)" style="width:36px;height:40px;border-radius:10px;border:none;background:#2563eb;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;color:#fff">+</button>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:6px">
+          <button onclick="adjLabor(0.25)" style="flex:1;padding:6px;border:1px solid #e5e5ea;border-radius:8px;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#2563eb">+15m</button>
+          <button onclick="adjLabor(0.5)" style="flex:1;padding:6px;border:1px solid #e5e5ea;border-radius:8px;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#2563eb">+30m</button>
+          <button onclick="adjLabor(1)" style="flex:1;padding:6px;border:1px solid #e5e5ea;border-radius:8px;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#2563eb">+1h</button>
+          <button onclick="adjLabor(2)" style="flex:1;padding:6px;border:1px solid #e5e5ea;border-radius:8px;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#2563eb">+2h</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px">Techs</div>
+      <div style="display:flex;border:2px solid #e5e5ea;border-radius:12px;overflow:hidden">
+        <button onclick="laborTechsVal='1';saveState();renderCart()" style="flex:1;padding:12px;border:none;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;min-height:48px;background:${laborTechsVal==='1'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='1'?'#fff':'#666'}">1 Tech<br><span style="font-size:10px;font-weight:600">$175/hr</span></button>
+        <button onclick="laborTechsVal='2';saveState();renderCart()" style="flex:1;padding:12px;border:none;border-left:1px solid #e5e5ea;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;min-height:48px;background:${laborTechsVal==='2'?'#2563eb':'#f5f5f5'};color:${laborTechsVal==='2'?'#fff':'#666'}">2 Tech<br><span style="font-size:10px;font-weight:600">$225/hr</span></button>
+      </div>
+    </div>
+
+    ${lh>0?r('Labor ('+lh+'h × $'+hr+'/hr)','$'+lc.toFixed(2),0,'#1e3a8a'):'<div style="font-size:12px;color:#aaa;text-align:center;padding:6px 0">Tap + or type hours above</div>'}
+
+    <div style="background:linear-gradient(135deg,#b45309,#92400e);border-radius:16px;padding:20px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 6px 20px rgba(180,83,9,.25)">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px">Grand Total</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">Materials + Labor</div>
+      </div>
+      <div style="font-size:30px;font-weight:900;color:#fff">$${gb.toFixed(2)}</div>
+    </div>
+  `;
 }
 
 // ── GitHub Sync ──
@@ -918,6 +1001,14 @@ async function testSync() { const s=document.getElementById('ghStatus'); if(!ghO
 async function fetchShared() { if(!ghOwner||!ghRepo)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:ghToken?{'Authorization':'Bearer '+ghToken}:{},cache:'no-store'}); if(!r.ok)return; const d=await r.json(); const shared=JSON.parse(atob(d.content)); let added=0; shared.forEach(sp=>{const exists=userProducts.some(up=>up.name===sp.name&&up.cat===sp.cat);if(!exists){userProducts.push(sp);PRICE_DATA.push({...sp,idx:PRICE_DATA.length});added++}}); if(added>0){saveUserProducts();populateCatDropdown();renderPriceList()} const st=document.getElementById('syncStatus');if(st)st.textContent='☁️ Synced · '+shared.length+' shared'}catch(e){}}
 async function pushToGitHub(product) { if(!ghOwner||!ghRepo||!ghToken)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:{'Authorization':'Bearer '+ghToken},cache:'no-store'}); let existing=[],sha=''; if(r.ok){const d=await r.json();sha=d.sha;existing=JSON.parse(atob(d.content))} existing.push(product); await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{method:'PUT',headers:{'Authorization':'Bearer '+ghToken,'Content-Type':'application/json'},body:JSON.stringify({message:'Add: '+product.name,content:btoa(JSON.stringify(existing,null,2)),...(sha?{sha}:{})})})}catch(e){}}
 function resetAll() { if(!confirm('Clear all custom products?'))return; userProducts=[];priceEdits={};saveUserProducts();saveEdits();location.reload() }
+
+// ── Labor adjustment ──
+function adjLabor(delta) {
+  const current = parseFloat(laborHoursVal) || 0;
+  const newVal = Math.max(0, Math.round((current + delta) * 4) / 4);
+  laborHoursVal = newVal > 0 ? String(newVal) : '';
+  saveState(); renderCart();
+}
 
 // ── Customer Quote ──
 function showQuote() {
