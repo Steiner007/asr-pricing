@@ -197,29 +197,21 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
 <!-- ═══ QUICK LIST MODAL ═══ -->
 <div id="quickListModal" class="emo" style="display:none" onpointerdown="closeQuickList()">
-  <div class="emc" onpointerdown="event.stopPropagation()" style="max-height:90vh;display:flex;flex-direction:column">
-    <h3>📋 Quick List Import</h3>
+  <div class="emc" onpointerdown="event.stopPropagation()" style="max-height:92vh;display:flex;flex-direction:column">
+    <h3>📋 Quick List → Cart</h3>
     <div style="font-size:12px;color:#888;margin-bottom:10px;line-height:1.6">
-      One item per line. Format:<br>
-      <code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">name, price</code> or
-      <code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">name, price, unit</code> or
-      <code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">name, price, unit, category</code>
+      Paste your materials list — one item per line.<br>
+      Start with qty if you want: <code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">80 pex pipe</code>
     </div>
-    <div style="margin-bottom:10px">
-      <label style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;display:block">Default Category</label>
-      <select id="qlCat" style="width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;color:#1c1c1e;outline:none;background:#fff"></select>
+    <textarea id="qlText" placeholder="80 pex pipe&#10;2 pvc 90 elbow&#10;1 toilet flange&#10;10ft copper pipe&#10;ball valve&#10;wax ring" style="min-height:120px;width:100%;padding:14px;border:2px solid #e5e5ea;border-radius:12px;font-size:15px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;resize:none;line-height:1.8" onfocus="this.style.borderColor='#d97706'" onblur="this.style.borderColor='#e5e5ea'"></textarea>
+    <div style="margin-top:8px">
+      <button onclick="previewQuickList()" style="width:100%;padding:12px;border:none;border-radius:10px;background:#f0f4ff;color:#1e40af;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;min-height:44px">🔍 Match Items</button>
     </div>
-    <div style="margin-bottom:10px">
-      <label style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;display:block">Default Unit</label>
-      <select id="qlUnit" style="width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;color:#1c1c1e;outline:none;background:#fff">
-        <option value="ea">ea</option><option value="ft">ft</option><option value="lot">lot</option><option value="hr">hr</option><option value="bag">bag</option><option value="job">job</option>
-      </select>
-    </div>
-    <textarea id="qlText" placeholder="3/4 ball valve, 12.50&#10;2&quot; PVC 90, 1.85, ea&#10;Toilet flange, 8.50, ea, DWV&#10;Wax ring, 4.25" style="flex:1;min-height:180px;width:100%;padding:14px;border:2px solid #e5e5ea;border-radius:12px;font-size:14px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;resize:none;line-height:1.8" onfocus="this.style.borderColor='#d97706'" onblur="this.style.borderColor='#e5e5ea'"></textarea>
-    <div id="qlPreview" style="margin-top:8px;font-size:12px;color:#888;min-height:20px"></div>
+    <div id="qlPreview" style="margin-top:8px;font-size:13px;color:#888;min-height:20px;text-align:center"></div>
+    <div id="qlMatches" style="margin-top:6px;max-height:280px;overflow-y:auto;border-radius:10px;border:1px solid #e5e5ea"></div>
     <div class="emb" style="margin-top:10px">
       <button style="background:#f5f5f5;color:#666" onclick="closeQuickList()">Cancel</button>
-      <button style="background:#d97706;color:#fff" onclick="submitQuickList()">Import All</button>
+      <button id="qlImportBtn" style="background:#059669;color:#fff;display:none" onclick="submitQuickList()">✅ Add All to Cart</button>
     </div>
   </div>
 </div>
@@ -1087,99 +1079,117 @@ async function fetchShared() { if(!ghOwner||!ghRepo)return; try{const r=await fe
 async function pushToGitHub(product) { if(!ghOwner||!ghRepo||!ghToken)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:{'Authorization':'Bearer '+ghToken},cache:'no-store'}); let existing=[],sha=''; if(r.ok){const d=await r.json();sha=d.sha;existing=JSON.parse(atob(d.content))} existing.push(product); await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{method:'PUT',headers:{'Authorization':'Bearer '+ghToken,'Content-Type':'application/json'},body:JSON.stringify({message:'Add: '+product.name,content:btoa(JSON.stringify(existing,null,2)),...(sha?{sha}:{})})})}catch(e){}}
 function resetAll() { if(!confirm('Clear all custom products?'))return; userProducts=[];priceEdits={};saveUserProducts();saveEdits();location.reload() }
 
-// ── Quick List ──
+// ── Quick List (cart import) ──
 function openQuickList() {
   document.getElementById('quickListModal').style.display = '';
-  const sel = document.getElementById('qlCat');
-  sel.innerHTML = '';
-  getCats().forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
-  const o = document.createElement('option'); o.value = '__new__'; o.textContent = '+ New Category…'; sel.appendChild(o);
   document.getElementById('qlText').value = '';
-  document.getElementById('qlPreview').textContent = '';
-  // Live preview on input
-  document.getElementById('qlText').oninput = () => {
-    const lines = document.getElementById('qlText').value.trim().split('\n').filter(l => l.trim());
-    document.getElementById('qlPreview').textContent = lines.length + ' item' + (lines.length !== 1 ? 's' : '') + ' detected';
-  };
+  document.getElementById('qlPreview').innerHTML = '';
+  document.getElementById('qlMatches').innerHTML = '';
+  document.getElementById('qlImportBtn').style.display = 'none';
   setTimeout(() => document.getElementById('qlText').focus(), 100);
 }
 function closeQuickList() { document.getElementById('quickListModal').style.display = 'none'; }
 
-function parseQuickLine(line) {
-  // Try to parse: name, price [, unit [, category]]
-  // Handle dollar signs, extra spaces
-  line = line.trim();
-  if (!line) return null;
+let qlMatchedItems = []; // store matched items for import
 
-  // Split by comma but be smart about it
-  const parts = line.split(',').map(p => p.trim());
-  if (parts.length < 2) {
-    // Try splitting by last number: "3/4 ball valve 12.50"
-    const m = line.match(/^(.+?)\s+\$?([\d]+\.?\d*)\s*$/);
-    if (m) return { name: m[1].trim(), price: parseFloat(m[2]) };
-    return null;
+function previewQuickList() {
+  const text = document.getElementById('qlText').value.trim();
+  const matchEl = document.getElementById('qlMatches');
+  const previewEl = document.getElementById('qlPreview');
+  const importBtn = document.getElementById('qlImportBtn');
+  if (!text) { matchEl.innerHTML = ''; previewEl.innerHTML = ''; importBtn.style.display = 'none'; return; }
+
+  const lines = text.split('\n').filter(l => l.trim());
+  qlMatchedItems = [];
+  let html = '';
+
+  lines.forEach((line, li) => {
+    line = line.trim();
+    if (!line) return;
+
+    // Try to extract qty from start: "80 pex pipe" or "2 90 elbow" or "80ft pex"
+    let qty = 1;
+    let searchText = line;
+    const qtyMatch = line.match(/^(\d+\.?\d*)\s*(ft|ea|pc|pcs|x)?\s+(.+)$/i);
+    if (qtyMatch) {
+      qty = parseFloat(qtyMatch[1]) || 1;
+      searchText = qtyMatch[3];
+    }
+
+    // Fuzzy match against all items
+    const scored = [];
+    PRICE_DATA.forEach((item, i) => {
+      const it = getItem(i);
+      if (!it) return;
+      const sc = fuzzyMatch(searchText, it.name, it.cat);
+      if (sc > 0) scored.push({ ...it, _score: sc });
+    });
+    scored.sort((a, b) => b._score - a._score);
+
+    const best = scored[0] || null;
+    const alts = scored.slice(1, 4);
+
+    if (best && best._score >= 3) {
+      qlMatchedItems.push({ idx: best.idx, qty, name: best.name, price: best.price, unit: best.unit, cat: best.cat, lineIdx: li });
+      html += `
+        <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;background:#f0fdf4">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;font-weight:800;color:#059669;flex-shrink:0">✅</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:700;color:#1c1c1e">${qty} × ${best.name}</div>
+              <div style="font-size:11px;color:#888">$${best.price.toFixed(2)}/${best.unit} · ${best.cat}</div>
+            </div>
+            <div style="font-size:13px;font-weight:800;color:#059669">$${(best.price * qty).toFixed(2)}</div>
+          </div>
+          <div style="font-size:10px;color:#aaa;margin-top:4px">from: "${line}"</div>
+          ${alts.length ? `<div style="margin-top:4px">${alts.map(a => `<button onclick="swapMatch(${li},${a.idx})" style="border:1px solid #e5e5ea;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#666;margin-right:4px">${a.name}</button>`).join('')}</div>` : ''}
+        </div>`;
+    } else {
+      qlMatchedItems.push({ idx: null, qty, name: line, lineIdx: li });
+      html += `
+        <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;background:#fef2f2">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;font-weight:800;color:#dc2626;flex-shrink:0">❌</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#666">"${line}"</div><div style="font-size:11px;color:#dc2626">No match found — will skip</div></div>
+          </div>
+        </div>`;
+    }
+  });
+
+  const matched = qlMatchedItems.filter(m => m.idx !== null);
+  previewEl.innerHTML = `<span style="color:#059669;font-weight:700">${matched.length} matched</span> of ${lines.length} lines`;
+  matchEl.innerHTML = html;
+  importBtn.style.display = matched.length > 0 ? '' : 'none';
+}
+
+function swapMatch(lineIdx, newIdx) {
+  const item = getItem(newIdx);
+  if (!item) return;
+  const match = qlMatchedItems.find(m => m.lineIdx === lineIdx);
+  if (match) {
+    match.idx = newIdx;
+    match.name = item.name;
+    match.price = item.price;
+    match.unit = item.unit;
+    match.cat = item.cat;
   }
-
-  const name = parts[0];
-  // Find the price — look for a number in parts[1]
-  const priceStr = parts[1].replace(/[$\s]/g, '');
-  const price = parseFloat(priceStr);
-  if (isNaN(price)) return null;
-
-  const unit = parts[2] || null;
-  const cat = parts[3] || null;
-
-  return { name, price, unit: unit || null, cat: cat || null };
+  // Re-render preview
+  previewQuickList();
 }
 
 function submitQuickList() {
-  const text = document.getElementById('qlText').value.trim();
-  if (!text) return;
-
-  let defaultCat = document.getElementById('qlCat').value;
-  if (defaultCat === '__new__') {
-    defaultCat = prompt('New category name:');
-    if (!defaultCat) return;
-  }
-  const defaultUnit = document.getElementById('qlUnit').value;
-
-  const lines = text.split('\n').filter(l => l.trim());
+  const matched = qlMatchedItems.filter(m => m.idx !== null);
   let added = 0;
-  let failed = [];
-
-  lines.forEach((line, i) => {
-    const parsed = parseQuickLine(line);
-    if (!parsed || !parsed.name || isNaN(parsed.price)) {
-      failed.push((i + 1) + ': ' + line.trim().substring(0, 30));
-      return;
-    }
-
-    const p = {
-      cat: parsed.cat || defaultCat,
-      name: parsed.name,
-      unit: parsed.unit || defaultUnit,
-      price: parsed.price
-    };
-
-    userProducts.push(p);
-    const idx = PRICE_DATA.length;
-    PRICE_DATA.push({ ...p, idx });
-    pushToGitHub(p);
+  matched.forEach(m => {
+    const existing = cart.find(c => c.idx === m.idx);
+    if (existing) { existing.qty += m.qty; }
+    else { cart.push({ idx: m.idx, name: m.name, cat: m.cat, unit: m.unit, price: m.price, qty: m.qty }); }
     added++;
   });
-
-  saveUserProducts();
-
-  const preview = document.getElementById('qlPreview');
-  if (failed.length) {
-    preview.innerHTML = `<span style="color:#059669">✅ ${added} added</span> · <span style="color:#dc2626">${failed.length} failed:</span><br>${failed.map(f => '<span style="color:#dc2626;font-size:11px">' + f + '</span>').join('<br>')}`;
-  } else {
-    preview.innerHTML = `<span style="color:#059669">✅ ${added} item${added!==1?'s':''} imported!</span>`;
-    setTimeout(() => { closeQuickList(); populateCatDropdown(); renderPriceList(); }, 800);
-  }
-
-  populateCatDropdown();
-  renderPriceList();
+  saveState(); updateCartBadge();
+  document.getElementById('qlPreview').innerHTML = `<span style="color:#059669;font-weight:800">✅ ${added} item${added!==1?'s':''} added to cart!</span>`;
+  document.getElementById('qlImportBtn').style.display = 'none';
+  setTimeout(() => { closeQuickList(); }, 900);
 }
 
 // ── Labor adjustment ──
