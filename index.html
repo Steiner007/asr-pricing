@@ -120,7 +120,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
   <div class="list">
     <div class="add-row">
-      <div class="add-hdr"><span>⭐ Add New Product</span></div>
+      <div class="add-hdr"><span>⭐ Add New Product</span><button onclick="openQuickList()" style="background:rgba(255,255,255,.3);border:none;border-radius:8px;padding:5px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📋 Quick List</button></div>
       <div class="add-body">
         <input id="addName" class="ai" type="text" placeholder="Product name…" maxlength="80">
         <div class="add-fields">
@@ -191,6 +191,35 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <div class="emb">
       <button style="background:#f5f5f5;color:#666" onclick="closeRename()">Cancel</button>
       <button style="background:#222;color:#fff" onclick="saveRename()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ QUICK LIST MODAL ═══ -->
+<div id="quickListModal" class="emo" style="display:none" onpointerdown="closeQuickList()">
+  <div class="emc" onpointerdown="event.stopPropagation()" style="max-height:90vh;display:flex;flex-direction:column">
+    <h3>📋 Quick List Import</h3>
+    <div style="font-size:12px;color:#888;margin-bottom:10px;line-height:1.6">
+      One item per line. Format:<br>
+      <code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">name, price</code> or
+      <code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">name, price, unit</code> or
+      <code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">name, price, unit, category</code>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;display:block">Default Category</label>
+      <select id="qlCat" style="width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;color:#1c1c1e;outline:none;background:#fff"></select>
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:#666;margin-bottom:4px;display:block">Default Unit</label>
+      <select id="qlUnit" style="width:100%;padding:12px;border:2px solid #e5e5ea;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;color:#1c1c1e;outline:none;background:#fff">
+        <option value="ea">ea</option><option value="ft">ft</option><option value="lot">lot</option><option value="hr">hr</option><option value="bag">bag</option><option value="job">job</option>
+      </select>
+    </div>
+    <textarea id="qlText" placeholder="3/4 ball valve, 12.50&#10;2&quot; PVC 90, 1.85, ea&#10;Toilet flange, 8.50, ea, DWV&#10;Wax ring, 4.25" style="flex:1;min-height:180px;width:100%;padding:14px;border:2px solid #e5e5ea;border-radius:12px;font-size:14px;font-weight:600;font-family:inherit;outline:none;color:#1c1c1e;resize:none;line-height:1.8" onfocus="this.style.borderColor='#d97706'" onblur="this.style.borderColor='#e5e5ea'"></textarea>
+    <div id="qlPreview" style="margin-top:8px;font-size:12px;color:#888;min-height:20px"></div>
+    <div class="emb" style="margin-top:10px">
+      <button style="background:#f5f5f5;color:#666" onclick="closeQuickList()">Cancel</button>
+      <button style="background:#d97706;color:#fff" onclick="submitQuickList()">Import All</button>
     </div>
   </div>
 </div>
@@ -734,22 +763,72 @@ function openSettings() { document.getElementById('priceView').classList.remove(
 function closeSettings() { document.getElementById('settingsView').classList.remove('on'); document.getElementById('priceView').classList.add('on'); }
 
 // ── Search with auto-suggest ──
+// ── Fuzzy search: splits query into words, matches if ALL words appear in name+cat ──
+// Returns a score (higher = better match). 0 = no match.
+function fuzzyMatch(query, name, cat) {
+  if (!query) return 1;
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+  if (!words.length) return 1;
+  const haystack = (name + ' ' + cat).toLowerCase();
+  // Common shorthand expansions
+  const expand = { '90': ['90°','90 ','ninety'], '45': ['45°','45 '], 'pvc': ['pvc','schedule'], 'cp': ['copper'], 'gal': ['gallon','gal '], 'ss': ['stainless'], 'wh': ['water heater'], 'dw': ['dishwasher'], 'gd': ['garbage disposal','disposal'], 'sw': ['sweat'], 'pex': ['pex','pro pex','propex'], 'gg': ['gas'], 'dis': ['disposal','disconnect'], 'fla': ['flange'], 'val': ['valve'], 'coup': ['coupling'], 'tee': ['tee'], 'elb': ['elbow'], 'ada': ['adapter'] };
+
+  let score = 0;
+  let allMatch = true;
+  for (const word of words) {
+    let found = false;
+    // Direct match
+    if (haystack.includes(word)) { found = true; score += 10; }
+    // Partial match (word is start of a word in haystack)
+    if (!found) {
+      const parts = haystack.split(/[\s\/\-"'×()]+/);
+      for (const p of parts) {
+        if (p.startsWith(word)) { found = true; score += 7; break; }
+      }
+    }
+    // Expanded shorthand match
+    if (!found && expand[word]) {
+      for (const alt of expand[word]) {
+        if (haystack.includes(alt)) { found = true; score += 5; break; }
+      }
+    }
+    // Partial anywhere (at least 3 chars)
+    if (!found && word.length >= 3) {
+      for (const p of haystack.split(/[\s\/\-"'×()]+/)) {
+        if (p.includes(word)) { found = true; score += 3; break; }
+      }
+    }
+    if (!found) allMatch = false;
+  }
+  // Bonus for exact full match
+  if (haystack.includes(query.toLowerCase())) score += 15;
+  // If not ALL words matched, heavily penalize but still show partial matches
+  if (!allMatch) score = Math.max(0, Math.floor(score * 0.3));
+  return score;
+}
+
 function onSearch() {
   const q = document.getElementById('priceSearch').value.toLowerCase().trim();
   renderPriceList();
   const box = document.getElementById('suggestBox');
-  if (q.length < 2) { box.classList.remove('on'); return; }
-  const matches = [];
+  if (q.length < 1) { box.classList.remove('on'); return; }
+  const scored = [];
   PRICE_DATA.forEach((item, i) => {
     const it = getItem(i);
     if (!it) return;
-    if (it.name.toLowerCase().includes(q) || it.cat.toLowerCase().includes(q)) matches.push(it);
+    const sc = fuzzyMatch(q, it.name, it.cat);
+    if (sc > 0) scored.push({ ...it, _score: sc });
   });
-  if (!matches.length) { box.classList.remove('on'); return; }
+  scored.sort((a, b) => b._score - a._score);
+  if (!scored.length) {
+    box.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:#aaa;font-weight:600">No matches — try different words</div>';
+    box.classList.add('on');
+    return;
+  }
   box.innerHTML = '';
-  matches.slice(0, 8).forEach(m => {
+  scored.slice(0, 10).forEach(m => {
     const d = document.createElement('div'); d.className = 'sug-item';
-    d.innerHTML = `${m.name} <span class="sc">· $${m.price.toFixed(2)}/${m.unit} · ${m.cat}</span>`;
+    d.innerHTML = `<div style="flex:1"><div>${m.name}</div><div class="sc">$${m.price.toFixed(2)}/${m.unit} · ${m.cat}</div></div>`;
     d.onpointerdown = (e) => { e.preventDefault(); document.getElementById('priceSearch').value = m.name; closeSuggest(); renderPriceList(); };
     box.appendChild(d);
   });
@@ -876,14 +955,20 @@ function renderPriceList() {
   const el = document.getElementById('priceListEl');
   if (!el) return;
   const cats = {};
+  const scored = [];
   PRICE_DATA.forEach((item, i) => {
     const it = getItem(i);
     if (!it) return;
-    if (q && !it.name.toLowerCase().includes(q) && !it.cat.toLowerCase().includes(q)) return;
+    const sc = fuzzyMatch(q, it.name, it.cat);
+    if (sc > 0) scored.push({ ...it, _score: sc });
+  });
+  // If searching, sort by score so best matches show first within each category
+  if (q) scored.sort((a, b) => b._score - a._score);
+  scored.forEach(it => {
     if (!cats[it.cat]) cats[it.cat] = [];
     cats[it.cat].push(it);
   });
-  if (!Object.keys(cats).length) { el.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa;font-size:13px;font-weight:600">No results</div>'; return; }
+  if (!Object.keys(cats).length) { el.innerHTML = '<div style="padding:32px;text-align:center;color:#aaa;font-size:14px;font-weight:600">No results for "' + q + '"<br><span style="font-size:12px;color:#bbb">Try fewer words or different terms</span></div>'; return; }
   el.innerHTML = '';
   Object.entries(cats).forEach(([cat, items]) => {
     const sec = document.createElement('div');
@@ -1001,6 +1086,101 @@ async function testSync() { const s=document.getElementById('ghStatus'); if(!ghO
 async function fetchShared() { if(!ghOwner||!ghRepo)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:ghToken?{'Authorization':'Bearer '+ghToken}:{},cache:'no-store'}); if(!r.ok)return; const d=await r.json(); const shared=JSON.parse(atob(d.content)); let added=0; shared.forEach(sp=>{const exists=userProducts.some(up=>up.name===sp.name&&up.cat===sp.cat);if(!exists){userProducts.push(sp);PRICE_DATA.push({...sp,idx:PRICE_DATA.length});added++}}); if(added>0){saveUserProducts();populateCatDropdown();renderPriceList()} const st=document.getElementById('syncStatus');if(st)st.textContent='☁️ Synced · '+shared.length+' shared'}catch(e){}}
 async function pushToGitHub(product) { if(!ghOwner||!ghRepo||!ghToken)return; try{const r=await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{headers:{'Authorization':'Bearer '+ghToken},cache:'no-store'}); let existing=[],sha=''; if(r.ok){const d=await r.json();sha=d.sha;existing=JSON.parse(atob(d.content))} existing.push(product); await fetch(`https://api.github.com/repos/${ghOwner}/${ghRepo}/contents/products.json`,{method:'PUT',headers:{'Authorization':'Bearer '+ghToken,'Content-Type':'application/json'},body:JSON.stringify({message:'Add: '+product.name,content:btoa(JSON.stringify(existing,null,2)),...(sha?{sha}:{})})})}catch(e){}}
 function resetAll() { if(!confirm('Clear all custom products?'))return; userProducts=[];priceEdits={};saveUserProducts();saveEdits();location.reload() }
+
+// ── Quick List ──
+function openQuickList() {
+  document.getElementById('quickListModal').style.display = '';
+  const sel = document.getElementById('qlCat');
+  sel.innerHTML = '';
+  getCats().forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  const o = document.createElement('option'); o.value = '__new__'; o.textContent = '+ New Category…'; sel.appendChild(o);
+  document.getElementById('qlText').value = '';
+  document.getElementById('qlPreview').textContent = '';
+  // Live preview on input
+  document.getElementById('qlText').oninput = () => {
+    const lines = document.getElementById('qlText').value.trim().split('\n').filter(l => l.trim());
+    document.getElementById('qlPreview').textContent = lines.length + ' item' + (lines.length !== 1 ? 's' : '') + ' detected';
+  };
+  setTimeout(() => document.getElementById('qlText').focus(), 100);
+}
+function closeQuickList() { document.getElementById('quickListModal').style.display = 'none'; }
+
+function parseQuickLine(line) {
+  // Try to parse: name, price [, unit [, category]]
+  // Handle dollar signs, extra spaces
+  line = line.trim();
+  if (!line) return null;
+
+  // Split by comma but be smart about it
+  const parts = line.split(',').map(p => p.trim());
+  if (parts.length < 2) {
+    // Try splitting by last number: "3/4 ball valve 12.50"
+    const m = line.match(/^(.+?)\s+\$?([\d]+\.?\d*)\s*$/);
+    if (m) return { name: m[1].trim(), price: parseFloat(m[2]) };
+    return null;
+  }
+
+  const name = parts[0];
+  // Find the price — look for a number in parts[1]
+  const priceStr = parts[1].replace(/[$\s]/g, '');
+  const price = parseFloat(priceStr);
+  if (isNaN(price)) return null;
+
+  const unit = parts[2] || null;
+  const cat = parts[3] || null;
+
+  return { name, price, unit: unit || null, cat: cat || null };
+}
+
+function submitQuickList() {
+  const text = document.getElementById('qlText').value.trim();
+  if (!text) return;
+
+  let defaultCat = document.getElementById('qlCat').value;
+  if (defaultCat === '__new__') {
+    defaultCat = prompt('New category name:');
+    if (!defaultCat) return;
+  }
+  const defaultUnit = document.getElementById('qlUnit').value;
+
+  const lines = text.split('\n').filter(l => l.trim());
+  let added = 0;
+  let failed = [];
+
+  lines.forEach((line, i) => {
+    const parsed = parseQuickLine(line);
+    if (!parsed || !parsed.name || isNaN(parsed.price)) {
+      failed.push((i + 1) + ': ' + line.trim().substring(0, 30));
+      return;
+    }
+
+    const p = {
+      cat: parsed.cat || defaultCat,
+      name: parsed.name,
+      unit: parsed.unit || defaultUnit,
+      price: parsed.price
+    };
+
+    userProducts.push(p);
+    const idx = PRICE_DATA.length;
+    PRICE_DATA.push({ ...p, idx });
+    pushToGitHub(p);
+    added++;
+  });
+
+  saveUserProducts();
+
+  const preview = document.getElementById('qlPreview');
+  if (failed.length) {
+    preview.innerHTML = `<span style="color:#059669">✅ ${added} added</span> · <span style="color:#dc2626">${failed.length} failed:</span><br>${failed.map(f => '<span style="color:#dc2626;font-size:11px">' + f + '</span>').join('<br>')}`;
+  } else {
+    preview.innerHTML = `<span style="color:#059669">✅ ${added} item${added!==1?'s':''} imported!</span>`;
+    setTimeout(() => { closeQuickList(); populateCatDropdown(); renderPriceList(); }, 800);
+  }
+
+  populateCatDropdown();
+  renderPriceList();
+}
 
 // ── Labor adjustment ──
 function adjLabor(delta) {
