@@ -1102,12 +1102,13 @@ function previewQuickList() {
   const lines = text.split('\n').filter(l => l.trim());
   qlMatchedItems = [];
   let html = '';
+  let greenCount = 0, yellowCount = 0, redCount = 0;
 
   lines.forEach((line, li) => {
     line = line.trim();
     if (!line) return;
 
-    // Try to extract qty from start: "80 pex pipe" or "2 90 elbow" or "80ft pex"
+    // Extract qty from start: "80 pex pipe" or "2 90 elbow" or "80ft pex"
     let qty = 1;
     let searchText = line;
     const qtyMatch = line.match(/^(\d+\.?\d*)\s*(ft|ea|pc|pcs|x)?\s+(.+)$/i);
@@ -1127,54 +1128,112 @@ function previewQuickList() {
     scored.sort((a, b) => b._score - a._score);
 
     const best = scored[0] || null;
-    const alts = scored.slice(1, 4);
+    const top5 = scored.slice(0, 5);
 
-    if (best && best._score >= 3) {
-      qlMatchedItems.push({ idx: best.idx, qty, name: best.name, price: best.price, unit: best.unit, cat: best.cat, lineIdx: li });
+    // Confidence tiers
+    const HIGH = 15;   // green — very confident
+    const LOW = 3;     // below this — red
+
+    if (best && best._score >= HIGH) {
+      // ── GREEN: confident match ──
+      greenCount++;
+      qlMatchedItems.push({ idx: best.idx, qty, name: best.name, price: best.price, unit: best.unit, cat: best.cat, lineIdx: li, confirmed: true });
       html += `
-        <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;background:#f0fdf4">
+        <div style="padding:12px 14px;border-bottom:1px solid #e5e5ea;background:#f0fdf4">
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;font-weight:800;color:#059669;flex-shrink:0">✅</span>
+            <span style="font-size:14px;flex-shrink:0">✅</span>
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700;color:#1c1c1e">${qty} × ${best.name}</div>
-              <div style="font-size:11px;color:#888">$${best.price.toFixed(2)}/${best.unit} · ${best.cat}</div>
+              <div style="font-size:14px;font-weight:700;color:#1c1c1e">${qty} × ${best.name}</div>
+              <div style="font-size:12px;color:#888;margin-top:2px">$${best.price.toFixed(2)}/${best.unit} · ${best.cat}</div>
             </div>
-            <div style="font-size:13px;font-weight:800;color:#059669">$${(best.price * qty).toFixed(2)}</div>
+            <div style="font-size:14px;font-weight:800;color:#059669">$${(best.price * qty).toFixed(2)}</div>
           </div>
-          <div style="font-size:10px;color:#aaa;margin-top:4px">from: "${line}"</div>
-          ${alts.length ? `<div style="margin-top:4px">${alts.map(a => `<button onclick="swapMatch(${li},${a.idx})" style="border:1px solid #e5e5ea;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#666;margin-right:4px">${a.name}</button>`).join('')}</div>` : ''}
+          <div style="font-size:10px;color:#bbb;margin-top:4px">from: "${line}"</div>
         </div>`;
-    } else {
-      qlMatchedItems.push({ idx: null, qty, name: line, lineIdx: li });
+
+    } else if (best && best._score >= LOW) {
+      // ── YELLOW: not sure, show options to pick ──
+      yellowCount++;
+      qlMatchedItems.push({ idx: null, qty, name: line, lineIdx: li, confirmed: false });
       html += `
-        <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;background:#fef2f2">
+        <div style="padding:12px 14px;border-bottom:1px solid #e5e5ea;background:#fffbeb">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="font-size:14px;flex-shrink:0">⚠️</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#92400e">Not sure — pick one:</div>
+              <div style="font-size:11px;color:#b45309">"${line}" (qty: ${qty})</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${top5.map(a => `
+              <button onclick="pickMatch(${li},${a.idx},${qty})" style="width:100%;text-align:left;padding:10px 12px;border:2px solid #fde68a;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;min-height:44px" onpointerdown="event.stopPropagation()">
+                <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1c1c1e">${a.name}</div><div style="font-size:11px;color:#888">$${a.price.toFixed(2)}/${a.unit} · ${a.cat}</div></div>
+                <div style="font-size:12px;font-weight:800;color:#92400e">$${(a.price * qty).toFixed(2)}</div>
+              </button>
+            `).join('')}
+            <button onclick="skipMatch(${li})" style="width:100%;text-align:center;padding:8px;border:1px solid #e5e5ea;border-radius:8px;background:#f5f5f5;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;color:#999;min-height:36px" onpointerdown="event.stopPropagation()">Skip this item</button>
+          </div>
+        </div>`;
+
+    } else {
+      // ── RED: no match ──
+      redCount++;
+      qlMatchedItems.push({ idx: null, qty, name: line, lineIdx: li, confirmed: false });
+      html += `
+        <div style="padding:12px 14px;border-bottom:1px solid #e5e5ea;background:#fef2f2">
           <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:11px;font-weight:800;color:#dc2626;flex-shrink:0">❌</span>
-            <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#666">"${line}"</div><div style="font-size:11px;color:#dc2626">No match found — will skip</div></div>
+            <span style="font-size:14px;flex-shrink:0">❌</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#dc2626">"${line}"</div>
+              <div style="font-size:12px;color:#999;margin-top:2px">No match found — will skip</div>
+            </div>
           </div>
         </div>`;
     }
   });
 
-  const matched = qlMatchedItems.filter(m => m.idx !== null);
-  previewEl.innerHTML = `<span style="color:#059669;font-weight:700">${matched.length} matched</span> of ${lines.length} lines`;
+  // Summary
+  let summary = '';
+  if (greenCount) summary += `<span style="color:#059669;font-weight:800">✅ ${greenCount} sure</span>`;
+  if (yellowCount) summary += `${summary?' · ':''}<span style="color:#d97706;font-weight:800">⚠️ ${yellowCount} pick</span>`;
+  if (redCount) summary += `${summary?' · ':''}<span style="color:#dc2626;font-weight:800">❌ ${redCount} no match</span>`;
+  previewEl.innerHTML = summary;
   matchEl.innerHTML = html;
-  importBtn.style.display = matched.length > 0 ? '' : 'none';
+
+  const canImport = qlMatchedItems.some(m => m.idx !== null && m.confirmed);
+  importBtn.style.display = canImport || yellowCount === 0 && greenCount > 0 ? '' : 'none';
+  updateImportBtn();
 }
 
-function swapMatch(lineIdx, newIdx) {
-  const item = getItem(newIdx);
+function pickMatch(lineIdx, itemIdx, qty) {
+  const item = getItem(itemIdx);
   if (!item) return;
   const match = qlMatchedItems.find(m => m.lineIdx === lineIdx);
   if (match) {
-    match.idx = newIdx;
+    match.idx = itemIdx;
     match.name = item.name;
     match.price = item.price;
     match.unit = item.unit;
     match.cat = item.cat;
+    match.qty = qty;
+    match.confirmed = true;
   }
-  // Re-render preview
+  // Re-render that row as green
   previewQuickList();
+}
+
+function skipMatch(lineIdx) {
+  const match = qlMatchedItems.find(m => m.lineIdx === lineIdx);
+  if (match) { match.idx = null; match.confirmed = false; }
+  previewQuickList();
+}
+
+function updateImportBtn() {
+  const btn = document.getElementById('qlImportBtn');
+  const ready = qlMatchedItems.filter(m => m.idx !== null);
+  const pending = qlMatchedItems.filter(m => m.idx === null && !m.confirmed);
+  btn.style.display = ready.length > 0 ? '' : 'none';
+  if (ready.length) btn.textContent = '✅ Add ' + ready.length + ' item' + (ready.length !== 1 ? 's' : '') + ' to Cart';
 }
 
 function submitQuickList() {
